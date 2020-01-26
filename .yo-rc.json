@@ -1,0 +1,42 @@
+{
+  "generator-jhipster": {
+    "promptValues": {
+      "packageName": "com.ravunana.educacao.pedagogico",
+      "nativeLanguage": "pt-pt"
+    },
+    "jhipsterVersion": "6.6.0",
+    "applicationType": "microservice",
+    "baseName": "pedagogico",
+    "packageName": "com.ravunana.educacao.pedagogico",
+    "packageFolder": "com/ravunana/educacao/pedagogico",
+    "serverPort": "8081",
+    "authenticationType": "uaa",
+    "uaaBaseName": "uaa",
+    "cacheProvider": "hazelcast",
+    "enableHibernateCache": true,
+    "websocket": false,
+    "databaseType": "sql",
+    "devDatabaseType": "mysql",
+    "prodDatabaseType": "mysql",
+    "searchEngine": "elasticsearch",
+    "messageBroker": "kafka",
+    "serviceDiscoveryType": "eureka",
+    "buildTool": "maven",
+    "enableSwaggerCodegen": false,
+    "jwtSecretKey": "MmNkZGZiNTk2MTBiNjJmYmE0NTA0NjkwOWViZjhmOGQ5N2I5ZGQxMzM2MGNkNjczMWNhNmQ4OGUyYjRkNTkyNWNhOThhMmFlYWYxMDJiZTM1ZjE0NWFkYWMwZmRlYTJhMmRjNWNlYWNjZDRlZjliZTQ3NTZjOGU3NGE5ODQ0MTg=",
+    "embeddableLaunchScript": false,
+    "creationTimestamp": 1580047345298,
+    "testFrameworks": ["gatling", "cucumber"],
+    "jhiPrefix": "jhi",
+    "entitySuffix": "",
+    "dtoSuffix": "DTO",
+    "otherModules": [],
+    "enableTranslation": true,
+    "clientPackageManager": "npm",
+    "nativeLanguage": "pt-pt",
+    "languages": ["pt-pt"],
+    "blueprints": [],
+    "skipClient": true,
+    "skipUserManagement": true
+  }
+}
