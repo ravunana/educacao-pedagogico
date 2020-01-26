@@ -1,0 +1,11 @@
+id;aprova_com;reporva_com;recurso_com;faz_exame;faz_recurso;faz_exame_especial;numero_falta_reprova;nota_minima_aprovacao
+1;38745;2560;15209;true;true;true;98161;63132
+2;50230;26408;91679;false;false;false;11086;74058
+3;9758;20599;88719;false;true;false;48124;21065
+4;62244;46293;73850;true;true;false;11476;46881
+5;47719;24826;4022;true;false;false;70824;12764
+6;13282;96347;11968;true;true;false;61187;52547
+7;54806;44913;78048;false;false;true;5482;13262
+8;35925;34726;63266;true;false;true;46595;84358
+9;17946;59514;56093;true;false;false;54740;51157
+10;45491;67050;59786;false;true;true;35284;29962

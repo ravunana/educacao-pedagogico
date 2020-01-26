@@ -1,0 +1,118 @@
+{
+    "name": "PlanoActividade",
+    "fields": [
+        {
+            "fieldName": "numeroActividade",
+            "fieldType": "Integer",
+            "fieldValidateRules": [
+                "unique",
+                "min"
+            ],
+            "fieldValidateRulesMin": 1
+        },
+        {
+            "fieldName": "atividade",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "objectivos",
+            "fieldType": "byte[]",
+            "fieldTypeBlobContent": "text",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "de",
+            "fieldType": "LocalDate",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "ate",
+            "fieldType": "LocalDate",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "responsavel",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "local",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "observacao",
+            "fieldType": "byte[]",
+            "fieldTypeBlobContent": "text"
+        },
+        {
+            "fieldName": "participantes",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "coResponsavel",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "anoLectivo",
+            "fieldType": "Integer",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "statusActividade",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "periodoLectivo",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "turno",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "classe",
+            "fieldType": "Integer"
+        }
+    ],
+    "relationships": [
+        {
+            "relationshipType": "many-to-one",
+            "otherEntityName": "curso",
+            "otherEntityRelationshipName": "planoActividade",
+            "relationshipName": "curso",
+            "otherEntityField": "nome"
+        },
+        {
+            "relationshipType": "many-to-one",
+            "otherEntityName": "turma",
+            "otherEntityRelationshipName": "planoActividade",
+            "relationshipName": "turma",
+            "otherEntityField": "descricao"
+        }
+    ],
+    "changelogDate": "20200126142027",
+    "entityTableName": "pdg_plano_actividade",
+    "dto": "mapstruct",
+    "pagination": "pagination",
+    "service": "serviceClass",
+    "jpaMetamodelFiltering": false,
+    "fluentMethods": true,
+    "readOnly": false,
+    "clientRootFolder": "pedagogico",
+    "applications": "*",
+    "microserviceName": "pedagogico",
+    "searchEngine": "elasticsearch"
+}

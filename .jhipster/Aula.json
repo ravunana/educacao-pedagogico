@@ -1,0 +1,77 @@
+{
+    "name": "Aula",
+    "fields": [
+        {
+            "fieldName": "data",
+            "fieldType": "ZonedDateTime",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "sumario",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "licao",
+            "fieldType": "Integer",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "dada",
+            "fieldType": "Boolean",
+            "fieldValidateRules": [
+                "required"
+            ]
+        }
+    ],
+    "relationships": [
+        {
+            "relationshipType": "one-to-many",
+            "otherEntityName": "chamada",
+            "otherEntityRelationshipName": "aula",
+            "relationshipName": "chamada"
+        },
+        {
+            "relationshipType": "many-to-many",
+            "otherEntityName": "planoAula",
+            "otherEntityRelationshipName": "aulaPlanoAula",
+            "relationshipName": "planoAula",
+            "otherEntityField": "id",
+            "ownerSide": true
+        },
+        {
+            "relationshipType": "many-to-one",
+            "otherEntityName": "turma",
+            "otherEntityRelationshipName": "aula",
+            "relationshipValidateRules": "required",
+            "relationshipName": "turma",
+            "otherEntityField": "descricao"
+        },
+        {
+            "relationshipType": "many-to-one",
+            "otherEntityName": "planoCurricular",
+            "otherEntityRelationshipName": "aula",
+            "relationshipValidateRules": "required",
+            "relationshipName": "curriulo",
+            "otherEntityField": "descricao"
+        }
+    ],
+    "changelogDate": "20200126142028",
+    "entityTableName": "cor_aula",
+    "dto": "mapstruct",
+    "pagination": "pagination",
+    "service": "serviceClass",
+    "jpaMetamodelFiltering": false,
+    "fluentMethods": true,
+    "readOnly": false,
+    "clientRootFolder": "pedagogico",
+    "applications": "*",
+    "microserviceName": "pedagogico",
+    "searchEngine": "elasticsearch"
+}

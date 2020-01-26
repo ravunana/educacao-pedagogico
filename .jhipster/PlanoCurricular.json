@@ -1,0 +1,110 @@
+{
+    "name": "PlanoCurricular",
+    "fields": [
+        {
+            "fieldName": "descricao",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "terminal",
+            "fieldType": "Boolean",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "tempoSemanal",
+            "fieldType": "Integer",
+            "fieldValidateRules": [
+                "required",
+                "min",
+                "max"
+            ],
+            "fieldValidateRulesMin": 1,
+            "fieldValidateRulesMax": 10
+        },
+        {
+            "fieldName": "periodoLectivo",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "componente",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "disciplina",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "classe",
+            "fieldType": "Integer",
+            "fieldValidateRules": [
+                "required"
+            ]
+        }
+    ],
+    "relationships": [
+        {
+            "relationshipType": "one-to-many",
+            "otherEntityName": "planoAula",
+            "otherEntityRelationshipName": "curriculo",
+            "relationshipName": "planoAula"
+        },
+        {
+            "relationshipType": "one-to-many",
+            "otherEntityName": "dosificacao",
+            "otherEntityRelationshipName": "curriulo",
+            "relationshipName": "dosificacao"
+        },
+        {
+            "relationshipType": "one-to-many",
+            "otherEntityName": "nota",
+            "otherEntityRelationshipName": "curriculo",
+            "relationshipName": "nota"
+        },
+        {
+            "relationshipType": "one-to-many",
+            "otherEntityName": "aula",
+            "otherEntityRelationshipName": "curriulo",
+            "relationshipName": "aula"
+        },
+        {
+            "relationshipType": "one-to-many",
+            "otherEntityName": "horario",
+            "otherEntityRelationshipName": "curriculo",
+            "relationshipName": "horario"
+        },
+        {
+            "relationshipType": "one-to-many",
+            "otherEntityName": "testeConhecimento",
+            "otherEntityRelationshipName": "curriculo",
+            "relationshipName": "testeConhecimento"
+        },
+        {
+            "relationshipType": "many-to-one",
+            "otherEntityName": "curso",
+            "otherEntityRelationshipName": "planoCurricular",
+            "relationshipValidateRules": "required",
+            "relationshipName": "curso",
+            "otherEntityField": "nome"
+        }
+    ],
+    "changelogDate": "20200126142023",
+    "entityTableName": "plano_curricular",
+    "dto": "mapstruct",
+    "pagination": "pagination",
+    "service": "serviceClass",
+    "jpaMetamodelFiltering": false,
+    "fluentMethods": true,
+    "readOnly": false,
+    "clientRootFolder": "pedagogico",
+    "applications": "*",
+    "microserviceName": "pedagogico",
+    "searchEngine": "elasticsearch"
+}

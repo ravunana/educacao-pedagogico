@@ -1,0 +1,105 @@
+{
+    "name": "Professor",
+    "fields": [
+        {
+            "fieldName": "nome",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "sexo",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "fotografia",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "contacto",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required",
+                "unique"
+            ]
+        },
+        {
+            "fieldName": "email",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "unique"
+            ]
+        },
+        {
+            "fieldName": "residencia",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "numeroAgente",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required",
+                "unique"
+            ]
+        },
+        {
+            "fieldName": "utilizadorId",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "ativo",
+            "fieldType": "Boolean"
+        }
+    ],
+    "relationships": [
+        {
+            "relationshipType": "one-to-many",
+            "otherEntityName": "horario",
+            "otherEntityRelationshipName": "professor",
+            "relationshipName": "horario"
+        },
+        {
+            "relationshipType": "one-to-many",
+            "otherEntityName": "turma",
+            "otherEntityRelationshipName": "coordenador",
+            "relationshipName": "turma"
+        },
+        {
+            "relationshipType": "one-to-many",
+            "otherEntityName": "planoAula",
+            "otherEntityRelationshipName": "professor",
+            "relationshipName": "planoAula"
+        },
+        {
+            "relationshipType": "one-to-many",
+            "otherEntityName": "nota",
+            "otherEntityRelationshipName": "professor",
+            "relationshipName": "nota"
+        },
+        {
+            "relationshipType": "one-to-many",
+            "otherEntityName": "testeConhecimento",
+            "otherEntityRelationshipName": "professor",
+            "relationshipName": "testeConhecimento"
+        }
+    ],
+    "changelogDate": "20200126142021",
+    "entityTableName": "professor",
+    "dto": "mapstruct",
+    "pagination": "pagination",
+    "service": "serviceClass",
+    "jpaMetamodelFiltering": false,
+    "fluentMethods": true,
+    "readOnly": false,
+    "clientRootFolder": "pedagogico",
+    "applications": "*",
+    "microserviceName": "pedagogico",
+    "searchEngine": "elasticsearch"
+}

@@ -1,0 +1,52 @@
+{
+    "name": "QuestaoTeste",
+    "fields": [
+        {
+            "fieldName": "grupo",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "numero",
+            "fieldType": "Double",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "argumento",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "questao",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        }
+    ],
+    "relationships": [
+        {
+            "relationshipType": "many-to-one",
+            "otherEntityName": "testeConhecimento",
+            "otherEntityRelationshipName": "questaoTeste",
+            "relationshipValidateRules": "required",
+            "relationshipName": "teste",
+            "otherEntityField": "id"
+        }
+    ],
+    "changelogDate": "20200126142035",
+    "entityTableName": "questao_teste",
+    "dto": "mapstruct",
+    "pagination": "pagination",
+    "service": "serviceClass",
+    "jpaMetamodelFiltering": false,
+    "fluentMethods": true,
+    "readOnly": false,
+    "clientRootFolder": "pedagogico",
+    "applications": "*",
+    "microserviceName": "pedagogico",
+    "searchEngine": "elasticsearch"
+}

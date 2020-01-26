@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.6.xsd">
+    <!--
+        Added the constraints for entity Dosificacao.
+    -->
+    <changeSet id="20200126142030-2" author="jhipster">
+        
+        <addForeignKeyConstraint baseColumnNames="dosificacao_id"
+                                 baseTableName="cor_dosificacao_curso"
+                                 constraintName="fk_cor_dosificacao_curso_cor_dosificacao_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="cor_dosificacao"/>
+
+        <addForeignKeyConstraint baseColumnNames="curso_id"
+                                 baseTableName="cor_dosificacao_curso"
+                                 constraintName="fk_cor_dosificacao_curso_curso_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="curso"/>
+        
+        <addForeignKeyConstraint baseColumnNames="curriulo_id"
+                                 baseTableName="cor_dosificacao"
+                                 constraintName="fk_cor_dosificacao_curriulo_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="plano_curricular"/>
+
+    </changeSet>
+</databaseChangeLog>

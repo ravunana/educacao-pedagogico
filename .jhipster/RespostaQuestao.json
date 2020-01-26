@@ -1,0 +1,32 @@
+{
+    "name": "RespostaQuestao",
+    "fields": [
+        {
+            "fieldName": "resposta",
+            "fieldType": "String"
+        }
+    ],
+    "relationships": [
+        {
+            "relationshipType": "one-to-one",
+            "otherEntityName": "questaoTeste",
+            "otherEntityRelationshipName": "respostaQuestao",
+            "relationshipValidateRules": "required",
+            "relationshipName": "questao",
+            "otherEntityField": "questao",
+            "ownerSide": true
+        }
+    ],
+    "changelogDate": "20200126142036",
+    "entityTableName": "resposta_questao",
+    "dto": "mapstruct",
+    "pagination": "pagination",
+    "service": "serviceClass",
+    "jpaMetamodelFiltering": false,
+    "fluentMethods": true,
+    "readOnly": false,
+    "clientRootFolder": "pedagogico",
+    "applications": "*",
+    "microserviceName": "pedagogico",
+    "searchEngine": "elasticsearch"
+}

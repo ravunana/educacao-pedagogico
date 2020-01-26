@@ -1,0 +1,78 @@
+{
+    "name": "ProvaAptidaoProfissional",
+    "fields": [
+        {
+            "fieldName": "numeroProcesso",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "nomeAluno",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "livroRegistro",
+            "fieldType": "Integer"
+        },
+        {
+            "fieldName": "folhaRegistro",
+            "fieldType": "Integer"
+        },
+        {
+            "fieldName": "temaProjectoTecnologio",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "notaProjectoTecnologio",
+            "fieldType": "Double",
+            "fieldValidateRules": [
+                "min",
+                "max"
+            ],
+            "fieldValidateRulesMin": 0,
+            "fieldValidateRulesMax": 20
+        },
+        {
+            "fieldName": "dataDefesa",
+            "fieldType": "ZonedDateTime"
+        },
+        {
+            "fieldName": "localEstagio",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "aproveitamentoEstagio",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "inicioEstagio",
+            "fieldType": "LocalDate"
+        },
+        {
+            "fieldName": "finalEstagio",
+            "fieldType": "LocalDate"
+        },
+        {
+            "fieldName": "data",
+            "fieldType": "ZonedDateTime"
+        }
+    ],
+    "relationships": [],
+    "changelogDate": "20200126142033",
+    "entityTableName": "prova_aptidao_profissional",
+    "dto": "mapstruct",
+    "pagination": "pagination",
+    "service": "serviceClass",
+    "jpaMetamodelFiltering": false,
+    "fluentMethods": true,
+    "readOnly": false,
+    "clientRootFolder": "pedagogico",
+    "applications": "*",
+    "microserviceName": "pedagogico",
+    "searchEngine": "elasticsearch"
+}

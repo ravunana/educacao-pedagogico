@@ -1,0 +1,84 @@
+{
+    "name": "Horario",
+    "fields": [
+        {
+            "fieldName": "inicio",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "fim",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "data",
+            "fieldType": "ZonedDateTime",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "anoLectivo",
+            "fieldType": "Integer",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "diaSemana",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "categoria",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        }
+    ],
+    "relationships": [
+        {
+            "relationshipType": "many-to-one",
+            "otherEntityName": "turma",
+            "otherEntityRelationshipName": "horario",
+            "relationshipValidateRules": "required",
+            "relationshipName": "turma",
+            "otherEntityField": "descricao"
+        },
+        {
+            "relationshipType": "many-to-one",
+            "otherEntityName": "professor",
+            "otherEntityRelationshipName": "horario",
+            "relationshipName": "professor",
+            "otherEntityField": "numeroAgente"
+        },
+        {
+            "relationshipType": "many-to-one",
+            "otherEntityName": "planoCurricular",
+            "otherEntityRelationshipName": "horario",
+            "relationshipValidateRules": "required",
+            "relationshipName": "curriculo",
+            "otherEntityField": "descricao"
+        }
+    ],
+    "changelogDate": "20200126142026",
+    "entityTableName": "horario",
+    "dto": "mapstruct",
+    "pagination": "pagination",
+    "service": "serviceClass",
+    "jpaMetamodelFiltering": false,
+    "fluentMethods": true,
+    "readOnly": false,
+    "clientRootFolder": "pedagogico",
+    "applications": "*",
+    "microserviceName": "pedagogico",
+    "searchEngine": "elasticsearch"
+}

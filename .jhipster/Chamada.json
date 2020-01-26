@@ -1,0 +1,45 @@
+{
+    "name": "Chamada",
+    "fields": [
+        {
+            "fieldName": "data",
+            "fieldType": "ZonedDateTime",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "presente",
+            "fieldType": "Boolean",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "numeroProcesso",
+            "fieldType": "String"
+        }
+    ],
+    "relationships": [
+        {
+            "relationshipType": "many-to-one",
+            "otherEntityName": "aula",
+            "otherEntityRelationshipName": "chamada",
+            "relationshipValidateRules": "required",
+            "relationshipName": "aula",
+            "otherEntityField": "data"
+        }
+    ],
+    "changelogDate": "20200126142029",
+    "entityTableName": "cor_chamada",
+    "dto": "mapstruct",
+    "pagination": "pagination",
+    "service": "serviceClass",
+    "jpaMetamodelFiltering": false,
+    "fluentMethods": true,
+    "readOnly": false,
+    "clientRootFolder": "pedagogico",
+    "applications": "*",
+    "microserviceName": "pedagogico",
+    "searchEngine": "elasticsearch"
+}

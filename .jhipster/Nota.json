@@ -1,0 +1,149 @@
+{
+    "name": "Nota",
+    "fields": [
+        {
+            "fieldName": "numeroProcesso",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "nomeAluno",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "disciplina",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "peridoLectivo",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "anoLectivo",
+            "fieldType": "Integer"
+        },
+        {
+            "fieldName": "faltaJustificada",
+            "fieldType": "Integer"
+        },
+        {
+            "fieldName": "faltaInjustificada",
+            "fieldType": "Integer"
+        },
+        {
+            "fieldName": "avaliacaoContinuca",
+            "fieldType": "Double",
+            "fieldValidateRules": [
+                "min",
+                "max"
+            ],
+            "fieldValidateRulesMin": 0,
+            "fieldValidateRulesMax": 20
+        },
+        {
+            "fieldName": "primeiraProva",
+            "fieldType": "Double",
+            "fieldValidateRules": [
+                "min",
+                "max"
+            ],
+            "fieldValidateRulesMin": 0,
+            "fieldValidateRulesMax": 20
+        },
+        {
+            "fieldName": "segundaProva",
+            "fieldType": "Double",
+            "fieldValidateRules": [
+                "min",
+                "max"
+            ],
+            "fieldValidateRulesMin": 0,
+            "fieldValidateRulesMax": 20
+        },
+        {
+            "fieldName": "exame",
+            "fieldType": "Double",
+            "fieldValidateRules": [
+                "min",
+                "max"
+            ],
+            "fieldValidateRulesMin": 0,
+            "fieldValidateRulesMax": 20
+        },
+        {
+            "fieldName": "recurso",
+            "fieldType": "Double",
+            "fieldValidateRules": [
+                "min",
+                "max"
+            ],
+            "fieldValidateRulesMin": 0,
+            "fieldValidateRulesMax": 20
+        },
+        {
+            "fieldName": "exameEspecial",
+            "fieldType": "Double",
+            "fieldValidateRules": [
+                "min",
+                "max"
+            ],
+            "fieldValidateRulesMin": 0,
+            "fieldValidateRulesMax": 20
+        },
+        {
+            "fieldName": "prova",
+            "fieldType": "byte[]",
+            "fieldTypeBlobContent": "any",
+            "fieldValidateRules": [
+                "required"
+            ]
+        },
+        {
+            "fieldName": "situacao",
+            "fieldType": "String"
+        }
+    ],
+    "relationships": [
+        {
+            "relationshipType": "many-to-one",
+            "otherEntityName": "turma",
+            "otherEntityRelationshipName": "nota",
+            "relationshipValidateRules": "required",
+            "relationshipName": "turma",
+            "otherEntityField": "descricao"
+        },
+        {
+            "relationshipType": "many-to-one",
+            "otherEntityName": "planoCurricular",
+            "otherEntityRelationshipName": "nota",
+            "relationshipValidateRules": "required",
+            "relationshipName": "curriculo",
+            "otherEntityField": "descricao"
+        },
+        {
+            "relationshipType": "many-to-one",
+            "otherEntityName": "professor",
+            "otherEntityRelationshipName": "nota",
+            "relationshipValidateRules": "required",
+            "relationshipName": "professor",
+            "otherEntityField": "nome"
+        }
+    ],
+    "changelogDate": "20200126142032",
+    "entityTableName": "cor_nota",
+    "dto": "mapstruct",
+    "pagination": "pagination",
+    "service": "serviceClass",
+    "jpaMetamodelFiltering": false,
+    "fluentMethods": true,
+    "readOnly": false,
+    "clientRootFolder": "pedagogico",
+    "applications": "*",
+    "microserviceName": "pedagogico",
+    "searchEngine": "elasticsearch"
+}

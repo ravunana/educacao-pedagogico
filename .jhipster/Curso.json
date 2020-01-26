@@ -1,0 +1,79 @@
+{
+    "name": "Curso",
+    "fields": [
+        {
+            "fieldName": "nome",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required",
+                "minlength",
+                "unique"
+            ],
+            "fieldValidateRulesMinlength": 10
+        },
+        {
+            "fieldName": "sigla",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required",
+                "minlength",
+                "maxlength",
+                "unique"
+            ],
+            "fieldValidateRulesMinlength": 3,
+            "fieldValidateRulesMaxlength": 12
+        },
+        {
+            "fieldName": "competencias",
+            "fieldType": "byte[]",
+            "fieldTypeBlobContent": "text"
+        },
+        {
+            "fieldName": "areaFormacao",
+            "fieldType": "String",
+            "fieldValidateRules": [
+                "required"
+            ]
+        }
+    ],
+    "relationships": [
+        {
+            "relationshipType": "one-to-many",
+            "otherEntityName": "planoCurricular",
+            "otherEntityRelationshipName": "curso",
+            "relationshipName": "planoCurricular"
+        },
+        {
+            "relationshipType": "one-to-many",
+            "otherEntityName": "turma",
+            "otherEntityRelationshipName": "curso",
+            "relationshipName": "turma"
+        },
+        {
+            "relationshipType": "one-to-many",
+            "otherEntityName": "planoActividade",
+            "otherEntityRelationshipName": "curso",
+            "relationshipName": "planoActividade"
+        },
+        {
+            "relationshipType": "many-to-many",
+            "otherEntityName": "dosificacao",
+            "otherEntityRelationshipName": "curso",
+            "relationshipName": "dosificacaoCurso",
+            "otherEntityField": "id",
+            "ownerSide": false
+        }
+    ],
+    "changelogDate": "20200126142022",
+    "entityTableName": "curso",
+    "dto": "mapstruct",
+    "pagination": "pagination",
+    "service": "serviceClass",
+    "jpaMetamodelFiltering": false,
+    "fluentMethods": true,
+    "readOnly": false,
+    "clientRootFolder": "pedagogico",
+    "applications": "*",
+    "microserviceName": "pedagogico",
+    "searchEngine": "elasticsearch"
+}

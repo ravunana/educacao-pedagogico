@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.6.xsd">
+    <!--
+        Added the constraints for entity Aula.
+    -->
+    <changeSet id="20200126142028-2" author="jhipster">
+        
+        <addForeignKeyConstraint baseColumnNames="aula_id"
+                                 baseTableName="cor_aula_plano_aula"
+                                 constraintName="fk_cor_aula_plano_aula_cor_aula_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="cor_aula"/>
+
+        <addForeignKeyConstraint baseColumnNames="plano_aula_id"
+                                 baseTableName="cor_aula_plano_aula"
+                                 constraintName="fk_cor_aula_plano_aula_plano_aula_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="cor_plano_aula"/>
+        
+        <addForeignKeyConstraint baseColumnNames="turma_id"
+                                 baseTableName="cor_aula"
+                                 constraintName="fk_cor_aula_turma_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="turma"/>
+
+        <addForeignKeyConstraint baseColumnNames="curriulo_id"
+                                 baseTableName="cor_aula"
+                                 constraintName="fk_cor_aula_curriulo_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="plano_curricular"/>
+
+    </changeSet>
+</databaseChangeLog>

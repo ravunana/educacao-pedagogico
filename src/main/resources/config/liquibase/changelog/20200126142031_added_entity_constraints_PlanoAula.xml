@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.6.xsd">
+    <!--
+        Added the constraints for entity PlanoAula.
+    -->
+    <changeSet id="20200126142031-2" author="jhipster">
+        
+        <addForeignKeyConstraint baseColumnNames="plano_aula_id"
+                                 baseTableName="cor_plano_aula_turma"
+                                 constraintName="fk_cor_plano_aula_turma_cor_plano_aula_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="cor_plano_aula"/>
+
+        <addForeignKeyConstraint baseColumnNames="turma_id"
+                                 baseTableName="cor_plano_aula_turma"
+                                 constraintName="fk_cor_plano_aula_turma_turma_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="turma"/>
+        
+        <addForeignKeyConstraint baseColumnNames="dosificacao_id"
+                                 baseTableName="cor_plano_aula"
+                                 constraintName="fk_cor_plano_aula_dosificacao_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="cor_dosificacao"/>
+
+        <addForeignKeyConstraint baseColumnNames="professor_id"
+                                 baseTableName="cor_plano_aula"
+                                 constraintName="fk_cor_plano_aula_professor_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="professor"/>
+
+        <addForeignKeyConstraint baseColumnNames="curriculo_id"
+                                 baseTableName="cor_plano_aula"
+                                 constraintName="fk_cor_plano_aula_curriculo_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="plano_curricular"/>
+
+    </changeSet>
+</databaseChangeLog>
