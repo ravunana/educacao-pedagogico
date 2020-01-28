@@ -86,12 +86,15 @@ class ProfessorGatlingTest extends Simulation {
                 "id":null
                 , "nome":"SAMPLE_TEXT"
                 , "sexo":"SAMPLE_TEXT"
-                , "fotografia":"SAMPLE_TEXT"
+                , "fotografia":null
                 , "contacto":"SAMPLE_TEXT"
                 , "email":"SAMPLE_TEXT"
                 , "residencia":"SAMPLE_TEXT"
                 , "numeroAgente":"SAMPLE_TEXT"
                 , "utilizadorId":"SAMPLE_TEXT"
+                , "grauAcademico":"SAMPLE_TEXT"
+                , "cursoAcademico":"SAMPLE_TEXT"
+                , "observacao":null
                 , "ativo":null
                 }""")).asJson
             .check(status.is(201))

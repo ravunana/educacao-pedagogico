@@ -3,6 +3,8 @@ package com.ravunana.educacao.pedagogico.web.rest;
 import com.ravunana.educacao.pedagogico.service.AulaService;
 import com.ravunana.educacao.pedagogico.web.rest.errors.BadRequestAlertException;
 import com.ravunana.educacao.pedagogico.service.dto.AulaDTO;
+import com.ravunana.educacao.pedagogico.service.dto.AulaCriteria;
+import com.ravunana.educacao.pedagogico.service.AulaQueryService;
 
 import io.github.jhipster.web.util.HeaderUtil;
 import io.github.jhipster.web.util.PaginationUtil;
@@ -44,8 +46,11 @@ public class AulaResource {
 
     private final AulaService aulaService;
 
-    public AulaResource(AulaService aulaService) {
+    private final AulaQueryService aulaQueryService;
+
+    public AulaResource(AulaService aulaService, AulaQueryService aulaQueryService) {
         this.aulaService = aulaService;
+        this.aulaQueryService = aulaQueryService;
     }
 
     /**
@@ -93,20 +98,28 @@ public class AulaResource {
      *
 
      * @param pageable the pagination information.
-     * @param eagerload flag to eager load entities from relationships (This is applicable for many-to-many).
+
+     * @param criteria the criteria which the requested entities should match.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of aulas in body.
      */
     @GetMapping("/aulas")
-    public ResponseEntity<List<AulaDTO>> getAllAulas(Pageable pageable, @RequestParam(required = false, defaultValue = "false") boolean eagerload) {
-        log.debug("REST request to get a page of Aulas");
-        Page<AulaDTO> page;
-        if (eagerload) {
-            page = aulaService.findAllWithEagerRelationships(pageable);
-        } else {
-            page = aulaService.findAll(pageable);
-        }
+    public ResponseEntity<List<AulaDTO>> getAllAulas(AulaCriteria criteria, Pageable pageable) {
+        log.debug("REST request to get Aulas by criteria: {}", criteria);
+        Page<AulaDTO> page = aulaQueryService.findByCriteria(criteria, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
+    }
+
+    /**
+    * {@code GET  /aulas/count} : count all the aulas.
+    *
+    * @param criteria the criteria which the requested entities should match.
+    * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
+    */
+    @GetMapping("/aulas/count")
+    public ResponseEntity<Long> countAulas(AulaCriteria criteria) {
+        log.debug("REST request to count Aulas by criteria: {}", criteria);
+        return ResponseEntity.ok().body(aulaQueryService.countByCriteria(criteria));
     }
 
     /**

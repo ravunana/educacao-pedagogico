@@ -14,7 +14,7 @@ import java.util.Optional;
  * Spring Data  repository for the Aula entity.
  */
 @Repository
-public interface AulaRepository extends JpaRepository<Aula, Long> {
+public interface AulaRepository extends JpaRepository<Aula, Long>, JpaSpecificationExecutor<Aula> {
 
     @Query(value = "select distinct aula from Aula aula left join fetch aula.planoAulas",
         countQuery = "select count(distinct aula) from Aula aula")

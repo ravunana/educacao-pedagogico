@@ -14,7 +14,7 @@ import java.util.Optional;
  * Spring Data  repository for the Dosificacao entity.
  */
 @Repository
-public interface DosificacaoRepository extends JpaRepository<Dosificacao, Long> {
+public interface DosificacaoRepository extends JpaRepository<Dosificacao, Long>, JpaSpecificationExecutor<Dosificacao> {
 
     @Query(value = "select distinct dosificacao from Dosificacao dosificacao left join fetch dosificacao.cursos",
         countQuery = "select count(distinct dosificacao) from Dosificacao dosificacao")

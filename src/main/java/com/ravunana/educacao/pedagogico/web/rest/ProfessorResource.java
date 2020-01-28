@@ -3,6 +3,8 @@ package com.ravunana.educacao.pedagogico.web.rest;
 import com.ravunana.educacao.pedagogico.service.ProfessorService;
 import com.ravunana.educacao.pedagogico.web.rest.errors.BadRequestAlertException;
 import com.ravunana.educacao.pedagogico.service.dto.ProfessorDTO;
+import com.ravunana.educacao.pedagogico.service.dto.ProfessorCriteria;
+import com.ravunana.educacao.pedagogico.service.ProfessorQueryService;
 
 import io.github.jhipster.web.util.HeaderUtil;
 import io.github.jhipster.web.util.PaginationUtil;
@@ -44,8 +46,11 @@ public class ProfessorResource {
 
     private final ProfessorService professorService;
 
-    public ProfessorResource(ProfessorService professorService) {
+    private final ProfessorQueryService professorQueryService;
+
+    public ProfessorResource(ProfessorService professorService, ProfessorQueryService professorQueryService) {
         this.professorService = professorService;
+        this.professorQueryService = professorQueryService;
     }
 
     /**
@@ -94,14 +99,27 @@ public class ProfessorResource {
 
      * @param pageable the pagination information.
 
+     * @param criteria the criteria which the requested entities should match.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of professors in body.
      */
     @GetMapping("/professors")
-    public ResponseEntity<List<ProfessorDTO>> getAllProfessors(Pageable pageable) {
-        log.debug("REST request to get a page of Professors");
-        Page<ProfessorDTO> page = professorService.findAll(pageable);
+    public ResponseEntity<List<ProfessorDTO>> getAllProfessors(ProfessorCriteria criteria, Pageable pageable) {
+        log.debug("REST request to get Professors by criteria: {}", criteria);
+        Page<ProfessorDTO> page = professorQueryService.findByCriteria(criteria, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
+    }
+
+    /**
+    * {@code GET  /professors/count} : count all the professors.
+    *
+    * @param criteria the criteria which the requested entities should match.
+    * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
+    */
+    @GetMapping("/professors/count")
+    public ResponseEntity<Long> countProfessors(ProfessorCriteria criteria) {
+        log.debug("REST request to count Professors by criteria: {}", criteria);
+        return ResponseEntity.ok().body(professorQueryService.countByCriteria(criteria));
     }
 
     /**

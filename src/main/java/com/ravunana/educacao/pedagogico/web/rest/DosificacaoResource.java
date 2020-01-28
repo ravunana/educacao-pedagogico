@@ -3,6 +3,8 @@ package com.ravunana.educacao.pedagogico.web.rest;
 import com.ravunana.educacao.pedagogico.service.DosificacaoService;
 import com.ravunana.educacao.pedagogico.web.rest.errors.BadRequestAlertException;
 import com.ravunana.educacao.pedagogico.service.dto.DosificacaoDTO;
+import com.ravunana.educacao.pedagogico.service.dto.DosificacaoCriteria;
+import com.ravunana.educacao.pedagogico.service.DosificacaoQueryService;
 
 import io.github.jhipster.web.util.HeaderUtil;
 import io.github.jhipster.web.util.PaginationUtil;
@@ -44,8 +46,11 @@ public class DosificacaoResource {
 
     private final DosificacaoService dosificacaoService;
 
-    public DosificacaoResource(DosificacaoService dosificacaoService) {
+    private final DosificacaoQueryService dosificacaoQueryService;
+
+    public DosificacaoResource(DosificacaoService dosificacaoService, DosificacaoQueryService dosificacaoQueryService) {
         this.dosificacaoService = dosificacaoService;
+        this.dosificacaoQueryService = dosificacaoQueryService;
     }
 
     /**
@@ -93,20 +98,28 @@ public class DosificacaoResource {
      *
 
      * @param pageable the pagination information.
-     * @param eagerload flag to eager load entities from relationships (This is applicable for many-to-many).
+
+     * @param criteria the criteria which the requested entities should match.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of dosificacaos in body.
      */
     @GetMapping("/dosificacaos")
-    public ResponseEntity<List<DosificacaoDTO>> getAllDosificacaos(Pageable pageable, @RequestParam(required = false, defaultValue = "false") boolean eagerload) {
-        log.debug("REST request to get a page of Dosificacaos");
-        Page<DosificacaoDTO> page;
-        if (eagerload) {
-            page = dosificacaoService.findAllWithEagerRelationships(pageable);
-        } else {
-            page = dosificacaoService.findAll(pageable);
-        }
+    public ResponseEntity<List<DosificacaoDTO>> getAllDosificacaos(DosificacaoCriteria criteria, Pageable pageable) {
+        log.debug("REST request to get Dosificacaos by criteria: {}", criteria);
+        Page<DosificacaoDTO> page = dosificacaoQueryService.findByCriteria(criteria, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
+    }
+
+    /**
+    * {@code GET  /dosificacaos/count} : count all the dosificacaos.
+    *
+    * @param criteria the criteria which the requested entities should match.
+    * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
+    */
+    @GetMapping("/dosificacaos/count")
+    public ResponseEntity<Long> countDosificacaos(DosificacaoCriteria criteria) {
+        log.debug("REST request to count Dosificacaos by criteria: {}", criteria);
+        return ResponseEntity.ok().body(dosificacaoQueryService.countByCriteria(criteria));
     }
 
     /**

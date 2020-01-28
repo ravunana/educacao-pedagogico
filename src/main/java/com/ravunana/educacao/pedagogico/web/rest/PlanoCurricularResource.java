@@ -3,6 +3,8 @@ package com.ravunana.educacao.pedagogico.web.rest;
 import com.ravunana.educacao.pedagogico.service.PlanoCurricularService;
 import com.ravunana.educacao.pedagogico.web.rest.errors.BadRequestAlertException;
 import com.ravunana.educacao.pedagogico.service.dto.PlanoCurricularDTO;
+import com.ravunana.educacao.pedagogico.service.dto.PlanoCurricularCriteria;
+import com.ravunana.educacao.pedagogico.service.PlanoCurricularQueryService;
 
 import io.github.jhipster.web.util.HeaderUtil;
 import io.github.jhipster.web.util.PaginationUtil;
@@ -44,8 +46,11 @@ public class PlanoCurricularResource {
 
     private final PlanoCurricularService planoCurricularService;
 
-    public PlanoCurricularResource(PlanoCurricularService planoCurricularService) {
+    private final PlanoCurricularQueryService planoCurricularQueryService;
+
+    public PlanoCurricularResource(PlanoCurricularService planoCurricularService, PlanoCurricularQueryService planoCurricularQueryService) {
         this.planoCurricularService = planoCurricularService;
+        this.planoCurricularQueryService = planoCurricularQueryService;
     }
 
     /**
@@ -94,14 +99,27 @@ public class PlanoCurricularResource {
 
      * @param pageable the pagination information.
 
+     * @param criteria the criteria which the requested entities should match.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of planoCurriculars in body.
      */
     @GetMapping("/plano-curriculars")
-    public ResponseEntity<List<PlanoCurricularDTO>> getAllPlanoCurriculars(Pageable pageable) {
-        log.debug("REST request to get a page of PlanoCurriculars");
-        Page<PlanoCurricularDTO> page = planoCurricularService.findAll(pageable);
+    public ResponseEntity<List<PlanoCurricularDTO>> getAllPlanoCurriculars(PlanoCurricularCriteria criteria, Pageable pageable) {
+        log.debug("REST request to get PlanoCurriculars by criteria: {}", criteria);
+        Page<PlanoCurricularDTO> page = planoCurricularQueryService.findByCriteria(criteria, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
+    }
+
+    /**
+    * {@code GET  /plano-curriculars/count} : count all the planoCurriculars.
+    *
+    * @param criteria the criteria which the requested entities should match.
+    * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
+    */
+    @GetMapping("/plano-curriculars/count")
+    public ResponseEntity<Long> countPlanoCurriculars(PlanoCurricularCriteria criteria) {
+        log.debug("REST request to count PlanoCurriculars by criteria: {}", criteria);
+        return ResponseEntity.ok().body(planoCurricularQueryService.countByCriteria(criteria));
     }
 
     /**

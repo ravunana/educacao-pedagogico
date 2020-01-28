@@ -4,14 +4,18 @@ import com.ravunana.educacao.pedagogico.PedagogicoApp;
 import com.ravunana.educacao.pedagogico.config.SecurityBeanOverrideConfiguration;
 import com.ravunana.educacao.pedagogico.domain.PlanoAula;
 import com.ravunana.educacao.pedagogico.domain.Turma;
+import com.ravunana.educacao.pedagogico.domain.Dosificacao;
 import com.ravunana.educacao.pedagogico.domain.Professor;
 import com.ravunana.educacao.pedagogico.domain.PlanoCurricular;
+import com.ravunana.educacao.pedagogico.domain.Aula;
 import com.ravunana.educacao.pedagogico.repository.PlanoAulaRepository;
 import com.ravunana.educacao.pedagogico.repository.search.PlanoAulaSearchRepository;
 import com.ravunana.educacao.pedagogico.service.PlanoAulaService;
 import com.ravunana.educacao.pedagogico.service.dto.PlanoAulaDTO;
 import com.ravunana.educacao.pedagogico.service.mapper.PlanoAulaMapper;
 import com.ravunana.educacao.pedagogico.web.rest.errors.ExceptionTranslator;
+import com.ravunana.educacao.pedagogico.service.dto.PlanoAulaCriteria;
+import com.ravunana.educacao.pedagogico.service.PlanoAulaQueryService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -71,6 +75,7 @@ public class PlanoAulaResourceIT {
 
     private static final ZonedDateTime DEFAULT_TEMPO = ZonedDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneOffset.UTC);
     private static final ZonedDateTime UPDATED_TEMPO = ZonedDateTime.now(ZoneId.systemDefault()).withNano(0);
+    private static final ZonedDateTime SMALLER_TEMPO = ZonedDateTime.ofInstant(Instant.ofEpochMilli(-1L), ZoneOffset.UTC);
 
     private static final String DEFAULT_RECURSOS_ENSINO = "AAAAAAAAAA";
     private static final String UPDATED_RECURSOS_ENSINO = "BBBBBBBBBB";
@@ -119,6 +124,9 @@ public class PlanoAulaResourceIT {
     private PlanoAulaSearchRepository mockPlanoAulaSearchRepository;
 
     @Autowired
+    private PlanoAulaQueryService planoAulaQueryService;
+
+    @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
 
     @Autowired
@@ -140,7 +148,7 @@ public class PlanoAulaResourceIT {
     @BeforeEach
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        final PlanoAulaResource planoAulaResource = new PlanoAulaResource(planoAulaService);
+        final PlanoAulaResource planoAulaResource = new PlanoAulaResource(planoAulaService, planoAulaQueryService);
         this.restPlanoAulaMockMvc = MockMvcBuilders.standaloneSetup(planoAulaResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
@@ -370,7 +378,7 @@ public class PlanoAulaResourceIT {
     
     @SuppressWarnings({"unchecked"})
     public void getAllPlanoAulasWithEagerRelationshipsIsEnabled() throws Exception {
-        PlanoAulaResource planoAulaResource = new PlanoAulaResource(planoAulaServiceMock);
+        PlanoAulaResource planoAulaResource = new PlanoAulaResource(planoAulaServiceMock, planoAulaQueryService);
         when(planoAulaServiceMock.findAllWithEagerRelationships(any())).thenReturn(new PageImpl(new ArrayList<>()));
 
         MockMvc restPlanoAulaMockMvc = MockMvcBuilders.standaloneSetup(planoAulaResource)
@@ -387,7 +395,7 @@ public class PlanoAulaResourceIT {
 
     @SuppressWarnings({"unchecked"})
     public void getAllPlanoAulasWithEagerRelationshipsIsNotEnabled() throws Exception {
-        PlanoAulaResource planoAulaResource = new PlanoAulaResource(planoAulaServiceMock);
+        PlanoAulaResource planoAulaResource = new PlanoAulaResource(planoAulaServiceMock, planoAulaQueryService);
             when(planoAulaServiceMock.findAllWithEagerRelationships(any())).thenReturn(new PageImpl(new ArrayList<>()));
             MockMvc restPlanoAulaMockMvc = MockMvcBuilders.standaloneSetup(planoAulaResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
@@ -427,6 +435,266 @@ public class PlanoAulaResourceIT {
             .andExpect(jsonPath("$.anexo1ContentType").value(DEFAULT_ANEXO_1_CONTENT_TYPE))
             .andExpect(jsonPath("$.anexo1").value(Base64Utils.encodeToString(DEFAULT_ANEXO_1)));
     }
+
+
+    @Test
+    @Transactional
+    public void getPlanoAulasByIdFiltering() throws Exception {
+        // Initialize the database
+        planoAulaRepository.saveAndFlush(planoAula);
+
+        Long id = planoAula.getId();
+
+        defaultPlanoAulaShouldBeFound("id.equals=" + id);
+        defaultPlanoAulaShouldNotBeFound("id.notEquals=" + id);
+
+        defaultPlanoAulaShouldBeFound("id.greaterThanOrEqual=" + id);
+        defaultPlanoAulaShouldNotBeFound("id.greaterThan=" + id);
+
+        defaultPlanoAulaShouldBeFound("id.lessThanOrEqual=" + id);
+        defaultPlanoAulaShouldNotBeFound("id.lessThan=" + id);
+    }
+
+
+    @Test
+    @Transactional
+    public void getAllPlanoAulasByTempoIsEqualToSomething() throws Exception {
+        // Initialize the database
+        planoAulaRepository.saveAndFlush(planoAula);
+
+        // Get all the planoAulaList where tempo equals to DEFAULT_TEMPO
+        defaultPlanoAulaShouldBeFound("tempo.equals=" + DEFAULT_TEMPO);
+
+        // Get all the planoAulaList where tempo equals to UPDATED_TEMPO
+        defaultPlanoAulaShouldNotBeFound("tempo.equals=" + UPDATED_TEMPO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoAulasByTempoIsNotEqualToSomething() throws Exception {
+        // Initialize the database
+        planoAulaRepository.saveAndFlush(planoAula);
+
+        // Get all the planoAulaList where tempo not equals to DEFAULT_TEMPO
+        defaultPlanoAulaShouldNotBeFound("tempo.notEquals=" + DEFAULT_TEMPO);
+
+        // Get all the planoAulaList where tempo not equals to UPDATED_TEMPO
+        defaultPlanoAulaShouldBeFound("tempo.notEquals=" + UPDATED_TEMPO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoAulasByTempoIsInShouldWork() throws Exception {
+        // Initialize the database
+        planoAulaRepository.saveAndFlush(planoAula);
+
+        // Get all the planoAulaList where tempo in DEFAULT_TEMPO or UPDATED_TEMPO
+        defaultPlanoAulaShouldBeFound("tempo.in=" + DEFAULT_TEMPO + "," + UPDATED_TEMPO);
+
+        // Get all the planoAulaList where tempo equals to UPDATED_TEMPO
+        defaultPlanoAulaShouldNotBeFound("tempo.in=" + UPDATED_TEMPO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoAulasByTempoIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        planoAulaRepository.saveAndFlush(planoAula);
+
+        // Get all the planoAulaList where tempo is not null
+        defaultPlanoAulaShouldBeFound("tempo.specified=true");
+
+        // Get all the planoAulaList where tempo is null
+        defaultPlanoAulaShouldNotBeFound("tempo.specified=false");
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoAulasByTempoIsGreaterThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        planoAulaRepository.saveAndFlush(planoAula);
+
+        // Get all the planoAulaList where tempo is greater than or equal to DEFAULT_TEMPO
+        defaultPlanoAulaShouldBeFound("tempo.greaterThanOrEqual=" + DEFAULT_TEMPO);
+
+        // Get all the planoAulaList where tempo is greater than or equal to UPDATED_TEMPO
+        defaultPlanoAulaShouldNotBeFound("tempo.greaterThanOrEqual=" + UPDATED_TEMPO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoAulasByTempoIsLessThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        planoAulaRepository.saveAndFlush(planoAula);
+
+        // Get all the planoAulaList where tempo is less than or equal to DEFAULT_TEMPO
+        defaultPlanoAulaShouldBeFound("tempo.lessThanOrEqual=" + DEFAULT_TEMPO);
+
+        // Get all the planoAulaList where tempo is less than or equal to SMALLER_TEMPO
+        defaultPlanoAulaShouldNotBeFound("tempo.lessThanOrEqual=" + SMALLER_TEMPO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoAulasByTempoIsLessThanSomething() throws Exception {
+        // Initialize the database
+        planoAulaRepository.saveAndFlush(planoAula);
+
+        // Get all the planoAulaList where tempo is less than DEFAULT_TEMPO
+        defaultPlanoAulaShouldNotBeFound("tempo.lessThan=" + DEFAULT_TEMPO);
+
+        // Get all the planoAulaList where tempo is less than UPDATED_TEMPO
+        defaultPlanoAulaShouldBeFound("tempo.lessThan=" + UPDATED_TEMPO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoAulasByTempoIsGreaterThanSomething() throws Exception {
+        // Initialize the database
+        planoAulaRepository.saveAndFlush(planoAula);
+
+        // Get all the planoAulaList where tempo is greater than DEFAULT_TEMPO
+        defaultPlanoAulaShouldNotBeFound("tempo.greaterThan=" + DEFAULT_TEMPO);
+
+        // Get all the planoAulaList where tempo is greater than SMALLER_TEMPO
+        defaultPlanoAulaShouldBeFound("tempo.greaterThan=" + SMALLER_TEMPO);
+    }
+
+
+    @Test
+    @Transactional
+    public void getAllPlanoAulasByTurmaIsEqualToSomething() throws Exception {
+        // Get already existing entity
+        Turma turma = planoAula.getTurma();
+        planoAulaRepository.saveAndFlush(planoAula);
+        Long turmaId = turma.getId();
+
+        // Get all the planoAulaList where turma equals to turmaId
+        defaultPlanoAulaShouldBeFound("turmaId.equals=" + turmaId);
+
+        // Get all the planoAulaList where turma equals to turmaId + 1
+        defaultPlanoAulaShouldNotBeFound("turmaId.equals=" + (turmaId + 1));
+    }
+
+
+    @Test
+    @Transactional
+    public void getAllPlanoAulasByDosificacaoIsEqualToSomething() throws Exception {
+        // Initialize the database
+        planoAulaRepository.saveAndFlush(planoAula);
+        Dosificacao dosificacao = DosificacaoResourceIT.createEntity(em);
+        em.persist(dosificacao);
+        em.flush();
+        planoAula.setDosificacao(dosificacao);
+        planoAulaRepository.saveAndFlush(planoAula);
+        Long dosificacaoId = dosificacao.getId();
+
+        // Get all the planoAulaList where dosificacao equals to dosificacaoId
+        defaultPlanoAulaShouldBeFound("dosificacaoId.equals=" + dosificacaoId);
+
+        // Get all the planoAulaList where dosificacao equals to dosificacaoId + 1
+        defaultPlanoAulaShouldNotBeFound("dosificacaoId.equals=" + (dosificacaoId + 1));
+    }
+
+
+    @Test
+    @Transactional
+    public void getAllPlanoAulasByProfessorIsEqualToSomething() throws Exception {
+        // Get already existing entity
+        Professor professor = planoAula.getProfessor();
+        planoAulaRepository.saveAndFlush(planoAula);
+        Long professorId = professor.getId();
+
+        // Get all the planoAulaList where professor equals to professorId
+        defaultPlanoAulaShouldBeFound("professorId.equals=" + professorId);
+
+        // Get all the planoAulaList where professor equals to professorId + 1
+        defaultPlanoAulaShouldNotBeFound("professorId.equals=" + (professorId + 1));
+    }
+
+
+    @Test
+    @Transactional
+    public void getAllPlanoAulasByCurriculoIsEqualToSomething() throws Exception {
+        // Get already existing entity
+        PlanoCurricular curriculo = planoAula.getCurriculo();
+        planoAulaRepository.saveAndFlush(planoAula);
+        Long curriculoId = curriculo.getId();
+
+        // Get all the planoAulaList where curriculo equals to curriculoId
+        defaultPlanoAulaShouldBeFound("curriculoId.equals=" + curriculoId);
+
+        // Get all the planoAulaList where curriculo equals to curriculoId + 1
+        defaultPlanoAulaShouldNotBeFound("curriculoId.equals=" + (curriculoId + 1));
+    }
+
+
+    @Test
+    @Transactional
+    public void getAllPlanoAulasByAulaPlanoAulaIsEqualToSomething() throws Exception {
+        // Initialize the database
+        planoAulaRepository.saveAndFlush(planoAula);
+        Aula aulaPlanoAula = AulaResourceIT.createEntity(em);
+        em.persist(aulaPlanoAula);
+        em.flush();
+        planoAula.addAulaPlanoAula(aulaPlanoAula);
+        planoAulaRepository.saveAndFlush(planoAula);
+        Long aulaPlanoAulaId = aulaPlanoAula.getId();
+
+        // Get all the planoAulaList where aulaPlanoAula equals to aulaPlanoAulaId
+        defaultPlanoAulaShouldBeFound("aulaPlanoAulaId.equals=" + aulaPlanoAulaId);
+
+        // Get all the planoAulaList where aulaPlanoAula equals to aulaPlanoAulaId + 1
+        defaultPlanoAulaShouldNotBeFound("aulaPlanoAulaId.equals=" + (aulaPlanoAulaId + 1));
+    }
+
+    /**
+     * Executes the search, and checks that the default entity is returned.
+     */
+    private void defaultPlanoAulaShouldBeFound(String filter) throws Exception {
+        restPlanoAulaMockMvc.perform(get("/api/plano-aulas?sort=id,desc&" + filter))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(planoAula.getId().intValue())))
+            .andExpect(jsonPath("$.[*].objectivoGeral").value(hasItem(DEFAULT_OBJECTIVO_GERAL.toString())))
+            .andExpect(jsonPath("$.[*].objectivoEspecifico").value(hasItem(DEFAULT_OBJECTIVO_ESPECIFICO.toString())))
+            .andExpect(jsonPath("$.[*].conteudo").value(hasItem(DEFAULT_CONTEUDO.toString())))
+            .andExpect(jsonPath("$.[*].estrategia").value(hasItem(DEFAULT_ESTRATEGIA.toString())))
+            .andExpect(jsonPath("$.[*].actividades").value(hasItem(DEFAULT_ACTIVIDADES.toString())))
+            .andExpect(jsonPath("$.[*].tempo").value(hasItem(sameInstant(DEFAULT_TEMPO))))
+            .andExpect(jsonPath("$.[*].recursosEnsino").value(hasItem(DEFAULT_RECURSOS_ENSINO.toString())))
+            .andExpect(jsonPath("$.[*].avaliacao").value(hasItem(DEFAULT_AVALIACAO.toString())))
+            .andExpect(jsonPath("$.[*].observacao").value(hasItem(DEFAULT_OBSERVACAO.toString())))
+            .andExpect(jsonPath("$.[*].bibliografia").value(hasItem(DEFAULT_BIBLIOGRAFIA.toString())))
+            .andExpect(jsonPath("$.[*].perfilEntrada").value(hasItem(DEFAULT_PERFIL_ENTRADA.toString())))
+            .andExpect(jsonPath("$.[*].perfilSaida").value(hasItem(DEFAULT_PERFIL_SAIDA.toString())))
+            .andExpect(jsonPath("$.[*].anexo1ContentType").value(hasItem(DEFAULT_ANEXO_1_CONTENT_TYPE)))
+            .andExpect(jsonPath("$.[*].anexo1").value(hasItem(Base64Utils.encodeToString(DEFAULT_ANEXO_1))));
+
+        // Check, that the count call also returns 1
+        restPlanoAulaMockMvc.perform(get("/api/plano-aulas/count?sort=id,desc&" + filter))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().string("1"));
+    }
+
+    /**
+     * Executes the search, and checks that the default entity is not returned.
+     */
+    private void defaultPlanoAulaShouldNotBeFound(String filter) throws Exception {
+        restPlanoAulaMockMvc.perform(get("/api/plano-aulas?sort=id,desc&" + filter))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$").isEmpty());
+
+        // Check, that the count call also returns 0
+        restPlanoAulaMockMvc.perform(get("/api/plano-aulas/count?sort=id,desc&" + filter))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().string("0"));
+    }
+
 
     @Test
     @Transactional

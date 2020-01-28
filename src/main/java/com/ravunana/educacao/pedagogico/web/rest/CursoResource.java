@@ -3,6 +3,8 @@ package com.ravunana.educacao.pedagogico.web.rest;
 import com.ravunana.educacao.pedagogico.service.CursoService;
 import com.ravunana.educacao.pedagogico.web.rest.errors.BadRequestAlertException;
 import com.ravunana.educacao.pedagogico.service.dto.CursoDTO;
+import com.ravunana.educacao.pedagogico.service.dto.CursoCriteria;
+import com.ravunana.educacao.pedagogico.service.CursoQueryService;
 
 import io.github.jhipster.web.util.HeaderUtil;
 import io.github.jhipster.web.util.PaginationUtil;
@@ -44,8 +46,11 @@ public class CursoResource {
 
     private final CursoService cursoService;
 
-    public CursoResource(CursoService cursoService) {
+    private final CursoQueryService cursoQueryService;
+
+    public CursoResource(CursoService cursoService, CursoQueryService cursoQueryService) {
         this.cursoService = cursoService;
+        this.cursoQueryService = cursoQueryService;
     }
 
     /**
@@ -94,14 +99,27 @@ public class CursoResource {
 
      * @param pageable the pagination information.
 
+     * @param criteria the criteria which the requested entities should match.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of cursos in body.
      */
     @GetMapping("/cursos")
-    public ResponseEntity<List<CursoDTO>> getAllCursos(Pageable pageable) {
-        log.debug("REST request to get a page of Cursos");
-        Page<CursoDTO> page = cursoService.findAll(pageable);
+    public ResponseEntity<List<CursoDTO>> getAllCursos(CursoCriteria criteria, Pageable pageable) {
+        log.debug("REST request to get Cursos by criteria: {}", criteria);
+        Page<CursoDTO> page = cursoQueryService.findByCriteria(criteria, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
+    }
+
+    /**
+    * {@code GET  /cursos/count} : count all the cursos.
+    *
+    * @param criteria the criteria which the requested entities should match.
+    * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
+    */
+    @GetMapping("/cursos/count")
+    public ResponseEntity<Long> countCursos(CursoCriteria criteria) {
+        log.debug("REST request to count Cursos by criteria: {}", criteria);
+        return ResponseEntity.ok().body(cursoQueryService.countByCriteria(criteria));
     }
 
     /**

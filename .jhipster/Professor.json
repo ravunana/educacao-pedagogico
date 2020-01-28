@@ -17,7 +17,8 @@
         },
         {
             "fieldName": "fotografia",
-            "fieldType": "String"
+            "fieldType": "byte[]",
+            "fieldTypeBlobContent": "any"
         },
         {
             "fieldName": "contacto",
@@ -52,6 +53,19 @@
         {
             "fieldName": "utilizadorId",
             "fieldType": "String"
+        },
+        {
+            "fieldName": "grauAcademico",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "cursoAcademico",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "observacao",
+            "fieldType": "byte[]",
+            "fieldTypeBlobContent": "text"
         },
         {
             "fieldName": "ativo",
@@ -95,7 +109,7 @@
     "dto": "mapstruct",
     "pagination": "pagination",
     "service": "serviceClass",
-    "jpaMetamodelFiltering": false,
+    "jpaMetamodelFiltering": true,
     "fluentMethods": true,
     "readOnly": false,
     "clientRootFolder": "pedagogico",

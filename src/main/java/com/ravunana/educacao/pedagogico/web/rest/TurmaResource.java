@@ -3,6 +3,8 @@ package com.ravunana.educacao.pedagogico.web.rest;
 import com.ravunana.educacao.pedagogico.service.TurmaService;
 import com.ravunana.educacao.pedagogico.web.rest.errors.BadRequestAlertException;
 import com.ravunana.educacao.pedagogico.service.dto.TurmaDTO;
+import com.ravunana.educacao.pedagogico.service.dto.TurmaCriteria;
+import com.ravunana.educacao.pedagogico.service.TurmaQueryService;
 
 import io.github.jhipster.web.util.HeaderUtil;
 import io.github.jhipster.web.util.PaginationUtil;
@@ -44,8 +46,11 @@ public class TurmaResource {
 
     private final TurmaService turmaService;
 
-    public TurmaResource(TurmaService turmaService) {
+    private final TurmaQueryService turmaQueryService;
+
+    public TurmaResource(TurmaService turmaService, TurmaQueryService turmaQueryService) {
         this.turmaService = turmaService;
+        this.turmaQueryService = turmaQueryService;
     }
 
     /**
@@ -94,14 +99,27 @@ public class TurmaResource {
 
      * @param pageable the pagination information.
 
+     * @param criteria the criteria which the requested entities should match.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of turmas in body.
      */
     @GetMapping("/turmas")
-    public ResponseEntity<List<TurmaDTO>> getAllTurmas(Pageable pageable) {
-        log.debug("REST request to get a page of Turmas");
-        Page<TurmaDTO> page = turmaService.findAll(pageable);
+    public ResponseEntity<List<TurmaDTO>> getAllTurmas(TurmaCriteria criteria, Pageable pageable) {
+        log.debug("REST request to get Turmas by criteria: {}", criteria);
+        Page<TurmaDTO> page = turmaQueryService.findByCriteria(criteria, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
+    }
+
+    /**
+    * {@code GET  /turmas/count} : count all the turmas.
+    *
+    * @param criteria the criteria which the requested entities should match.
+    * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
+    */
+    @GetMapping("/turmas/count")
+    public ResponseEntity<Long> countTurmas(TurmaCriteria criteria) {
+        log.debug("REST request to count Turmas by criteria: {}", criteria);
+        return ResponseEntity.ok().body(turmaQueryService.countByCriteria(criteria));
     }
 
     /**

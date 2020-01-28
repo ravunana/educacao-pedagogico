@@ -3,6 +3,8 @@ package com.ravunana.educacao.pedagogico.web.rest;
 import com.ravunana.educacao.pedagogico.service.PlanoActividadeService;
 import com.ravunana.educacao.pedagogico.web.rest.errors.BadRequestAlertException;
 import com.ravunana.educacao.pedagogico.service.dto.PlanoActividadeDTO;
+import com.ravunana.educacao.pedagogico.service.dto.PlanoActividadeCriteria;
+import com.ravunana.educacao.pedagogico.service.PlanoActividadeQueryService;
 
 import io.github.jhipster.web.util.HeaderUtil;
 import io.github.jhipster.web.util.PaginationUtil;
@@ -44,8 +46,11 @@ public class PlanoActividadeResource {
 
     private final PlanoActividadeService planoActividadeService;
 
-    public PlanoActividadeResource(PlanoActividadeService planoActividadeService) {
+    private final PlanoActividadeQueryService planoActividadeQueryService;
+
+    public PlanoActividadeResource(PlanoActividadeService planoActividadeService, PlanoActividadeQueryService planoActividadeQueryService) {
         this.planoActividadeService = planoActividadeService;
+        this.planoActividadeQueryService = planoActividadeQueryService;
     }
 
     /**
@@ -94,14 +99,27 @@ public class PlanoActividadeResource {
 
      * @param pageable the pagination information.
 
+     * @param criteria the criteria which the requested entities should match.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of planoActividades in body.
      */
     @GetMapping("/plano-actividades")
-    public ResponseEntity<List<PlanoActividadeDTO>> getAllPlanoActividades(Pageable pageable) {
-        log.debug("REST request to get a page of PlanoActividades");
-        Page<PlanoActividadeDTO> page = planoActividadeService.findAll(pageable);
+    public ResponseEntity<List<PlanoActividadeDTO>> getAllPlanoActividades(PlanoActividadeCriteria criteria, Pageable pageable) {
+        log.debug("REST request to get PlanoActividades by criteria: {}", criteria);
+        Page<PlanoActividadeDTO> page = planoActividadeQueryService.findByCriteria(criteria, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
+    }
+
+    /**
+    * {@code GET  /plano-actividades/count} : count all the planoActividades.
+    *
+    * @param criteria the criteria which the requested entities should match.
+    * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
+    */
+    @GetMapping("/plano-actividades/count")
+    public ResponseEntity<Long> countPlanoActividades(PlanoActividadeCriteria criteria) {
+        log.debug("REST request to count PlanoActividades by criteria: {}", criteria);
+        return ResponseEntity.ok().body(planoActividadeQueryService.countByCriteria(criteria));
     }
 
     /**

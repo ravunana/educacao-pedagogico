@@ -22,7 +22,10 @@
             <column name="sexo" type="varchar(255)">
                 <constraints nullable="false" />
             </column>
-            <column name="fotografia" type="varchar(255)">
+            <column name="fotografia" type="longblob">
+                <constraints nullable="true" />
+            </column>
+            <column name="fotografia_content_type" type="varchar(255)">
                 <constraints nullable="true" />
             </column>
             <column name="contacto" type="varchar(255)">
@@ -38,6 +41,15 @@
                 <constraints nullable="false" unique="true" uniqueConstraintName="ux_professor_numero_agente" />
             </column>
             <column name="utilizador_id" type="varchar(255)">
+                <constraints nullable="true" />
+            </column>
+            <column name="grau_academico" type="varchar(255)">
+                <constraints nullable="true" />
+            </column>
+            <column name="curso_academico" type="varchar(255)">
+                <constraints nullable="true" />
+            </column>
+            <column name="observacao" type="${clobType}">
                 <constraints nullable="true" />
             </column>
             <column name="ativo" type="boolean">
@@ -68,12 +80,16 @@
             <column name="id" type="numeric"/>
             <column name="nome" type="string"/>
             <column name="sexo" type="string"/>
-            <column name="fotografia" type="string"/>
+            <column name="fotografia" type="blob"/>
+            <column name="fotografia_content_type" type="string"/>
             <column name="contacto" type="string"/>
             <column name="email" type="string"/>
             <column name="residencia" type="string"/>
             <column name="numero_agente" type="string"/>
             <column name="utilizador_id" type="string"/>
+            <column name="grau_academico" type="string"/>
+            <column name="curso_academico" type="string"/>
+            <column name="observacao" type="clob"/>
             <column name="ativo" type="boolean"/>
             <!-- jhipster-needle-liquibase-add-loadcolumn - JHipster (and/or extensions) can add load columns here, do not remove-->
         </loadData>

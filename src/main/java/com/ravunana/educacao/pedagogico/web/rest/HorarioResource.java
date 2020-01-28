@@ -3,6 +3,8 @@ package com.ravunana.educacao.pedagogico.web.rest;
 import com.ravunana.educacao.pedagogico.service.HorarioService;
 import com.ravunana.educacao.pedagogico.web.rest.errors.BadRequestAlertException;
 import com.ravunana.educacao.pedagogico.service.dto.HorarioDTO;
+import com.ravunana.educacao.pedagogico.service.dto.HorarioCriteria;
+import com.ravunana.educacao.pedagogico.service.HorarioQueryService;
 
 import io.github.jhipster.web.util.HeaderUtil;
 import io.github.jhipster.web.util.PaginationUtil;
@@ -44,8 +46,11 @@ public class HorarioResource {
 
     private final HorarioService horarioService;
 
-    public HorarioResource(HorarioService horarioService) {
+    private final HorarioQueryService horarioQueryService;
+
+    public HorarioResource(HorarioService horarioService, HorarioQueryService horarioQueryService) {
         this.horarioService = horarioService;
+        this.horarioQueryService = horarioQueryService;
     }
 
     /**
@@ -94,14 +99,27 @@ public class HorarioResource {
 
      * @param pageable the pagination information.
 
+     * @param criteria the criteria which the requested entities should match.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of horarios in body.
      */
     @GetMapping("/horarios")
-    public ResponseEntity<List<HorarioDTO>> getAllHorarios(Pageable pageable) {
-        log.debug("REST request to get a page of Horarios");
-        Page<HorarioDTO> page = horarioService.findAll(pageable);
+    public ResponseEntity<List<HorarioDTO>> getAllHorarios(HorarioCriteria criteria, Pageable pageable) {
+        log.debug("REST request to get Horarios by criteria: {}", criteria);
+        Page<HorarioDTO> page = horarioQueryService.findByCriteria(criteria, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
+    }
+
+    /**
+    * {@code GET  /horarios/count} : count all the horarios.
+    *
+    * @param criteria the criteria which the requested entities should match.
+    * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
+    */
+    @GetMapping("/horarios/count")
+    public ResponseEntity<Long> countHorarios(HorarioCriteria criteria) {
+        log.debug("REST request to count Horarios by criteria: {}", criteria);
+        return ResponseEntity.ok().body(horarioQueryService.countByCriteria(criteria));
     }
 
     /**

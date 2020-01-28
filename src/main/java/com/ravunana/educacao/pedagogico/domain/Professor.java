@@ -34,8 +34,12 @@ public class Professor implements Serializable {
     @Column(name = "sexo", nullable = false)
     private String sexo;
 
+    @Lob
     @Column(name = "fotografia")
-    private String fotografia;
+    private byte[] fotografia;
+
+    @Column(name = "fotografia_content_type")
+    private String fotografiaContentType;
 
     @NotNull
     @Column(name = "contacto", nullable = false, unique = true)
@@ -55,6 +59,16 @@ public class Professor implements Serializable {
 
     @Column(name = "utilizador_id")
     private String utilizadorId;
+
+    @Column(name = "grau_academico")
+    private String grauAcademico;
+
+    @Column(name = "curso_academico")
+    private String cursoAcademico;
+
+    @Lob
+    @Column(name = "observacao")
+    private String observacao;
 
     @Column(name = "ativo")
     private Boolean ativo;
@@ -114,17 +128,30 @@ public class Professor implements Serializable {
         this.sexo = sexo;
     }
 
-    public String getFotografia() {
+    public byte[] getFotografia() {
         return fotografia;
     }
 
-    public Professor fotografia(String fotografia) {
+    public Professor fotografia(byte[] fotografia) {
         this.fotografia = fotografia;
         return this;
     }
 
-    public void setFotografia(String fotografia) {
+    public void setFotografia(byte[] fotografia) {
         this.fotografia = fotografia;
+    }
+
+    public String getFotografiaContentType() {
+        return fotografiaContentType;
+    }
+
+    public Professor fotografiaContentType(String fotografiaContentType) {
+        this.fotografiaContentType = fotografiaContentType;
+        return this;
+    }
+
+    public void setFotografiaContentType(String fotografiaContentType) {
+        this.fotografiaContentType = fotografiaContentType;
     }
 
     public String getContacto() {
@@ -190,6 +217,45 @@ public class Professor implements Serializable {
 
     public void setUtilizadorId(String utilizadorId) {
         this.utilizadorId = utilizadorId;
+    }
+
+    public String getGrauAcademico() {
+        return grauAcademico;
+    }
+
+    public Professor grauAcademico(String grauAcademico) {
+        this.grauAcademico = grauAcademico;
+        return this;
+    }
+
+    public void setGrauAcademico(String grauAcademico) {
+        this.grauAcademico = grauAcademico;
+    }
+
+    public String getCursoAcademico() {
+        return cursoAcademico;
+    }
+
+    public Professor cursoAcademico(String cursoAcademico) {
+        this.cursoAcademico = cursoAcademico;
+        return this;
+    }
+
+    public void setCursoAcademico(String cursoAcademico) {
+        this.cursoAcademico = cursoAcademico;
+    }
+
+    public String getObservacao() {
+        return observacao;
+    }
+
+    public Professor observacao(String observacao) {
+        this.observacao = observacao;
+        return this;
+    }
+
+    public void setObservacao(String observacao) {
+        this.observacao = observacao;
     }
 
     public Boolean isAtivo() {
@@ -354,11 +420,15 @@ public class Professor implements Serializable {
             ", nome='" + getNome() + "'" +
             ", sexo='" + getSexo() + "'" +
             ", fotografia='" + getFotografia() + "'" +
+            ", fotografiaContentType='" + getFotografiaContentType() + "'" +
             ", contacto='" + getContacto() + "'" +
             ", email='" + getEmail() + "'" +
             ", residencia='" + getResidencia() + "'" +
             ", numeroAgente='" + getNumeroAgente() + "'" +
             ", utilizadorId='" + getUtilizadorId() + "'" +
+            ", grauAcademico='" + getGrauAcademico() + "'" +
+            ", cursoAcademico='" + getCursoAcademico() + "'" +
+            ", observacao='" + getObservacao() + "'" +
             ", ativo='" + isAtivo() + "'" +
             "}";
     }

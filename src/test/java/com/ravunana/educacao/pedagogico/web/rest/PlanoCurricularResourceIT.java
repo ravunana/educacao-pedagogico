@@ -3,6 +3,12 @@ package com.ravunana.educacao.pedagogico.web.rest;
 import com.ravunana.educacao.pedagogico.PedagogicoApp;
 import com.ravunana.educacao.pedagogico.config.SecurityBeanOverrideConfiguration;
 import com.ravunana.educacao.pedagogico.domain.PlanoCurricular;
+import com.ravunana.educacao.pedagogico.domain.PlanoAula;
+import com.ravunana.educacao.pedagogico.domain.Dosificacao;
+import com.ravunana.educacao.pedagogico.domain.Nota;
+import com.ravunana.educacao.pedagogico.domain.Aula;
+import com.ravunana.educacao.pedagogico.domain.Horario;
+import com.ravunana.educacao.pedagogico.domain.TesteConhecimento;
 import com.ravunana.educacao.pedagogico.domain.Curso;
 import com.ravunana.educacao.pedagogico.repository.PlanoCurricularRepository;
 import com.ravunana.educacao.pedagogico.repository.search.PlanoCurricularSearchRepository;
@@ -10,6 +16,8 @@ import com.ravunana.educacao.pedagogico.service.PlanoCurricularService;
 import com.ravunana.educacao.pedagogico.service.dto.PlanoCurricularDTO;
 import com.ravunana.educacao.pedagogico.service.mapper.PlanoCurricularMapper;
 import com.ravunana.educacao.pedagogico.web.rest.errors.ExceptionTranslator;
+import com.ravunana.educacao.pedagogico.service.dto.PlanoCurricularCriteria;
+import com.ravunana.educacao.pedagogico.service.PlanoCurricularQueryService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -52,6 +60,7 @@ public class PlanoCurricularResourceIT {
 
     private static final Integer DEFAULT_TEMPO_SEMANAL = 1;
     private static final Integer UPDATED_TEMPO_SEMANAL = 2;
+    private static final Integer SMALLER_TEMPO_SEMANAL = 1 - 1;
 
     private static final String DEFAULT_PERIODO_LECTIVO = "AAAAAAAAAA";
     private static final String UPDATED_PERIODO_LECTIVO = "BBBBBBBBBB";
@@ -64,6 +73,7 @@ public class PlanoCurricularResourceIT {
 
     private static final Integer DEFAULT_CLASSE = 1;
     private static final Integer UPDATED_CLASSE = 2;
+    private static final Integer SMALLER_CLASSE = 1 - 1;
 
     @Autowired
     private PlanoCurricularRepository planoCurricularRepository;
@@ -81,6 +91,9 @@ public class PlanoCurricularResourceIT {
      */
     @Autowired
     private PlanoCurricularSearchRepository mockPlanoCurricularSearchRepository;
+
+    @Autowired
+    private PlanoCurricularQueryService planoCurricularQueryService;
 
     @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
@@ -104,7 +117,7 @@ public class PlanoCurricularResourceIT {
     @BeforeEach
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        final PlanoCurricularResource planoCurricularResource = new PlanoCurricularResource(planoCurricularService);
+        final PlanoCurricularResource planoCurricularResource = new PlanoCurricularResource(planoCurricularService, planoCurricularQueryService);
         this.restPlanoCurricularMockMvc = MockMvcBuilders.standaloneSetup(planoCurricularResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
@@ -359,6 +372,776 @@ public class PlanoCurricularResourceIT {
             .andExpect(jsonPath("$.disciplina").value(DEFAULT_DISCIPLINA))
             .andExpect(jsonPath("$.classe").value(DEFAULT_CLASSE));
     }
+
+
+    @Test
+    @Transactional
+    public void getPlanoCurricularsByIdFiltering() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        Long id = planoCurricular.getId();
+
+        defaultPlanoCurricularShouldBeFound("id.equals=" + id);
+        defaultPlanoCurricularShouldNotBeFound("id.notEquals=" + id);
+
+        defaultPlanoCurricularShouldBeFound("id.greaterThanOrEqual=" + id);
+        defaultPlanoCurricularShouldNotBeFound("id.greaterThan=" + id);
+
+        defaultPlanoCurricularShouldBeFound("id.lessThanOrEqual=" + id);
+        defaultPlanoCurricularShouldNotBeFound("id.lessThan=" + id);
+    }
+
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByDescricaoIsEqualToSomething() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where descricao equals to DEFAULT_DESCRICAO
+        defaultPlanoCurricularShouldBeFound("descricao.equals=" + DEFAULT_DESCRICAO);
+
+        // Get all the planoCurricularList where descricao equals to UPDATED_DESCRICAO
+        defaultPlanoCurricularShouldNotBeFound("descricao.equals=" + UPDATED_DESCRICAO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByDescricaoIsNotEqualToSomething() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where descricao not equals to DEFAULT_DESCRICAO
+        defaultPlanoCurricularShouldNotBeFound("descricao.notEquals=" + DEFAULT_DESCRICAO);
+
+        // Get all the planoCurricularList where descricao not equals to UPDATED_DESCRICAO
+        defaultPlanoCurricularShouldBeFound("descricao.notEquals=" + UPDATED_DESCRICAO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByDescricaoIsInShouldWork() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where descricao in DEFAULT_DESCRICAO or UPDATED_DESCRICAO
+        defaultPlanoCurricularShouldBeFound("descricao.in=" + DEFAULT_DESCRICAO + "," + UPDATED_DESCRICAO);
+
+        // Get all the planoCurricularList where descricao equals to UPDATED_DESCRICAO
+        defaultPlanoCurricularShouldNotBeFound("descricao.in=" + UPDATED_DESCRICAO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByDescricaoIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where descricao is not null
+        defaultPlanoCurricularShouldBeFound("descricao.specified=true");
+
+        // Get all the planoCurricularList where descricao is null
+        defaultPlanoCurricularShouldNotBeFound("descricao.specified=false");
+    }
+                @Test
+    @Transactional
+    public void getAllPlanoCurricularsByDescricaoContainsSomething() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where descricao contains DEFAULT_DESCRICAO
+        defaultPlanoCurricularShouldBeFound("descricao.contains=" + DEFAULT_DESCRICAO);
+
+        // Get all the planoCurricularList where descricao contains UPDATED_DESCRICAO
+        defaultPlanoCurricularShouldNotBeFound("descricao.contains=" + UPDATED_DESCRICAO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByDescricaoNotContainsSomething() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where descricao does not contain DEFAULT_DESCRICAO
+        defaultPlanoCurricularShouldNotBeFound("descricao.doesNotContain=" + DEFAULT_DESCRICAO);
+
+        // Get all the planoCurricularList where descricao does not contain UPDATED_DESCRICAO
+        defaultPlanoCurricularShouldBeFound("descricao.doesNotContain=" + UPDATED_DESCRICAO);
+    }
+
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByTerminalIsEqualToSomething() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where terminal equals to DEFAULT_TERMINAL
+        defaultPlanoCurricularShouldBeFound("terminal.equals=" + DEFAULT_TERMINAL);
+
+        // Get all the planoCurricularList where terminal equals to UPDATED_TERMINAL
+        defaultPlanoCurricularShouldNotBeFound("terminal.equals=" + UPDATED_TERMINAL);
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByTerminalIsNotEqualToSomething() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where terminal not equals to DEFAULT_TERMINAL
+        defaultPlanoCurricularShouldNotBeFound("terminal.notEquals=" + DEFAULT_TERMINAL);
+
+        // Get all the planoCurricularList where terminal not equals to UPDATED_TERMINAL
+        defaultPlanoCurricularShouldBeFound("terminal.notEquals=" + UPDATED_TERMINAL);
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByTerminalIsInShouldWork() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where terminal in DEFAULT_TERMINAL or UPDATED_TERMINAL
+        defaultPlanoCurricularShouldBeFound("terminal.in=" + DEFAULT_TERMINAL + "," + UPDATED_TERMINAL);
+
+        // Get all the planoCurricularList where terminal equals to UPDATED_TERMINAL
+        defaultPlanoCurricularShouldNotBeFound("terminal.in=" + UPDATED_TERMINAL);
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByTerminalIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where terminal is not null
+        defaultPlanoCurricularShouldBeFound("terminal.specified=true");
+
+        // Get all the planoCurricularList where terminal is null
+        defaultPlanoCurricularShouldNotBeFound("terminal.specified=false");
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByTempoSemanalIsEqualToSomething() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where tempoSemanal equals to DEFAULT_TEMPO_SEMANAL
+        defaultPlanoCurricularShouldBeFound("tempoSemanal.equals=" + DEFAULT_TEMPO_SEMANAL);
+
+        // Get all the planoCurricularList where tempoSemanal equals to UPDATED_TEMPO_SEMANAL
+        defaultPlanoCurricularShouldNotBeFound("tempoSemanal.equals=" + UPDATED_TEMPO_SEMANAL);
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByTempoSemanalIsNotEqualToSomething() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where tempoSemanal not equals to DEFAULT_TEMPO_SEMANAL
+        defaultPlanoCurricularShouldNotBeFound("tempoSemanal.notEquals=" + DEFAULT_TEMPO_SEMANAL);
+
+        // Get all the planoCurricularList where tempoSemanal not equals to UPDATED_TEMPO_SEMANAL
+        defaultPlanoCurricularShouldBeFound("tempoSemanal.notEquals=" + UPDATED_TEMPO_SEMANAL);
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByTempoSemanalIsInShouldWork() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where tempoSemanal in DEFAULT_TEMPO_SEMANAL or UPDATED_TEMPO_SEMANAL
+        defaultPlanoCurricularShouldBeFound("tempoSemanal.in=" + DEFAULT_TEMPO_SEMANAL + "," + UPDATED_TEMPO_SEMANAL);
+
+        // Get all the planoCurricularList where tempoSemanal equals to UPDATED_TEMPO_SEMANAL
+        defaultPlanoCurricularShouldNotBeFound("tempoSemanal.in=" + UPDATED_TEMPO_SEMANAL);
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByTempoSemanalIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where tempoSemanal is not null
+        defaultPlanoCurricularShouldBeFound("tempoSemanal.specified=true");
+
+        // Get all the planoCurricularList where tempoSemanal is null
+        defaultPlanoCurricularShouldNotBeFound("tempoSemanal.specified=false");
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByTempoSemanalIsGreaterThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where tempoSemanal is greater than or equal to DEFAULT_TEMPO_SEMANAL
+        defaultPlanoCurricularShouldBeFound("tempoSemanal.greaterThanOrEqual=" + DEFAULT_TEMPO_SEMANAL);
+
+        // Get all the planoCurricularList where tempoSemanal is greater than or equal to (DEFAULT_TEMPO_SEMANAL + 1)
+        defaultPlanoCurricularShouldNotBeFound("tempoSemanal.greaterThanOrEqual=" + (DEFAULT_TEMPO_SEMANAL + 1));
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByTempoSemanalIsLessThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where tempoSemanal is less than or equal to DEFAULT_TEMPO_SEMANAL
+        defaultPlanoCurricularShouldBeFound("tempoSemanal.lessThanOrEqual=" + DEFAULT_TEMPO_SEMANAL);
+
+        // Get all the planoCurricularList where tempoSemanal is less than or equal to SMALLER_TEMPO_SEMANAL
+        defaultPlanoCurricularShouldNotBeFound("tempoSemanal.lessThanOrEqual=" + SMALLER_TEMPO_SEMANAL);
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByTempoSemanalIsLessThanSomething() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where tempoSemanal is less than DEFAULT_TEMPO_SEMANAL
+        defaultPlanoCurricularShouldNotBeFound("tempoSemanal.lessThan=" + DEFAULT_TEMPO_SEMANAL);
+
+        // Get all the planoCurricularList where tempoSemanal is less than (DEFAULT_TEMPO_SEMANAL + 1)
+        defaultPlanoCurricularShouldBeFound("tempoSemanal.lessThan=" + (DEFAULT_TEMPO_SEMANAL + 1));
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByTempoSemanalIsGreaterThanSomething() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where tempoSemanal is greater than DEFAULT_TEMPO_SEMANAL
+        defaultPlanoCurricularShouldNotBeFound("tempoSemanal.greaterThan=" + DEFAULT_TEMPO_SEMANAL);
+
+        // Get all the planoCurricularList where tempoSemanal is greater than SMALLER_TEMPO_SEMANAL
+        defaultPlanoCurricularShouldBeFound("tempoSemanal.greaterThan=" + SMALLER_TEMPO_SEMANAL);
+    }
+
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByPeriodoLectivoIsEqualToSomething() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where periodoLectivo equals to DEFAULT_PERIODO_LECTIVO
+        defaultPlanoCurricularShouldBeFound("periodoLectivo.equals=" + DEFAULT_PERIODO_LECTIVO);
+
+        // Get all the planoCurricularList where periodoLectivo equals to UPDATED_PERIODO_LECTIVO
+        defaultPlanoCurricularShouldNotBeFound("periodoLectivo.equals=" + UPDATED_PERIODO_LECTIVO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByPeriodoLectivoIsNotEqualToSomething() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where periodoLectivo not equals to DEFAULT_PERIODO_LECTIVO
+        defaultPlanoCurricularShouldNotBeFound("periodoLectivo.notEquals=" + DEFAULT_PERIODO_LECTIVO);
+
+        // Get all the planoCurricularList where periodoLectivo not equals to UPDATED_PERIODO_LECTIVO
+        defaultPlanoCurricularShouldBeFound("periodoLectivo.notEquals=" + UPDATED_PERIODO_LECTIVO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByPeriodoLectivoIsInShouldWork() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where periodoLectivo in DEFAULT_PERIODO_LECTIVO or UPDATED_PERIODO_LECTIVO
+        defaultPlanoCurricularShouldBeFound("periodoLectivo.in=" + DEFAULT_PERIODO_LECTIVO + "," + UPDATED_PERIODO_LECTIVO);
+
+        // Get all the planoCurricularList where periodoLectivo equals to UPDATED_PERIODO_LECTIVO
+        defaultPlanoCurricularShouldNotBeFound("periodoLectivo.in=" + UPDATED_PERIODO_LECTIVO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByPeriodoLectivoIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where periodoLectivo is not null
+        defaultPlanoCurricularShouldBeFound("periodoLectivo.specified=true");
+
+        // Get all the planoCurricularList where periodoLectivo is null
+        defaultPlanoCurricularShouldNotBeFound("periodoLectivo.specified=false");
+    }
+                @Test
+    @Transactional
+    public void getAllPlanoCurricularsByPeriodoLectivoContainsSomething() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where periodoLectivo contains DEFAULT_PERIODO_LECTIVO
+        defaultPlanoCurricularShouldBeFound("periodoLectivo.contains=" + DEFAULT_PERIODO_LECTIVO);
+
+        // Get all the planoCurricularList where periodoLectivo contains UPDATED_PERIODO_LECTIVO
+        defaultPlanoCurricularShouldNotBeFound("periodoLectivo.contains=" + UPDATED_PERIODO_LECTIVO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByPeriodoLectivoNotContainsSomething() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where periodoLectivo does not contain DEFAULT_PERIODO_LECTIVO
+        defaultPlanoCurricularShouldNotBeFound("periodoLectivo.doesNotContain=" + DEFAULT_PERIODO_LECTIVO);
+
+        // Get all the planoCurricularList where periodoLectivo does not contain UPDATED_PERIODO_LECTIVO
+        defaultPlanoCurricularShouldBeFound("periodoLectivo.doesNotContain=" + UPDATED_PERIODO_LECTIVO);
+    }
+
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByComponenteIsEqualToSomething() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where componente equals to DEFAULT_COMPONENTE
+        defaultPlanoCurricularShouldBeFound("componente.equals=" + DEFAULT_COMPONENTE);
+
+        // Get all the planoCurricularList where componente equals to UPDATED_COMPONENTE
+        defaultPlanoCurricularShouldNotBeFound("componente.equals=" + UPDATED_COMPONENTE);
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByComponenteIsNotEqualToSomething() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where componente not equals to DEFAULT_COMPONENTE
+        defaultPlanoCurricularShouldNotBeFound("componente.notEquals=" + DEFAULT_COMPONENTE);
+
+        // Get all the planoCurricularList where componente not equals to UPDATED_COMPONENTE
+        defaultPlanoCurricularShouldBeFound("componente.notEquals=" + UPDATED_COMPONENTE);
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByComponenteIsInShouldWork() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where componente in DEFAULT_COMPONENTE or UPDATED_COMPONENTE
+        defaultPlanoCurricularShouldBeFound("componente.in=" + DEFAULT_COMPONENTE + "," + UPDATED_COMPONENTE);
+
+        // Get all the planoCurricularList where componente equals to UPDATED_COMPONENTE
+        defaultPlanoCurricularShouldNotBeFound("componente.in=" + UPDATED_COMPONENTE);
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByComponenteIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where componente is not null
+        defaultPlanoCurricularShouldBeFound("componente.specified=true");
+
+        // Get all the planoCurricularList where componente is null
+        defaultPlanoCurricularShouldNotBeFound("componente.specified=false");
+    }
+                @Test
+    @Transactional
+    public void getAllPlanoCurricularsByComponenteContainsSomething() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where componente contains DEFAULT_COMPONENTE
+        defaultPlanoCurricularShouldBeFound("componente.contains=" + DEFAULT_COMPONENTE);
+
+        // Get all the planoCurricularList where componente contains UPDATED_COMPONENTE
+        defaultPlanoCurricularShouldNotBeFound("componente.contains=" + UPDATED_COMPONENTE);
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByComponenteNotContainsSomething() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where componente does not contain DEFAULT_COMPONENTE
+        defaultPlanoCurricularShouldNotBeFound("componente.doesNotContain=" + DEFAULT_COMPONENTE);
+
+        // Get all the planoCurricularList where componente does not contain UPDATED_COMPONENTE
+        defaultPlanoCurricularShouldBeFound("componente.doesNotContain=" + UPDATED_COMPONENTE);
+    }
+
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByDisciplinaIsEqualToSomething() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where disciplina equals to DEFAULT_DISCIPLINA
+        defaultPlanoCurricularShouldBeFound("disciplina.equals=" + DEFAULT_DISCIPLINA);
+
+        // Get all the planoCurricularList where disciplina equals to UPDATED_DISCIPLINA
+        defaultPlanoCurricularShouldNotBeFound("disciplina.equals=" + UPDATED_DISCIPLINA);
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByDisciplinaIsNotEqualToSomething() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where disciplina not equals to DEFAULT_DISCIPLINA
+        defaultPlanoCurricularShouldNotBeFound("disciplina.notEquals=" + DEFAULT_DISCIPLINA);
+
+        // Get all the planoCurricularList where disciplina not equals to UPDATED_DISCIPLINA
+        defaultPlanoCurricularShouldBeFound("disciplina.notEquals=" + UPDATED_DISCIPLINA);
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByDisciplinaIsInShouldWork() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where disciplina in DEFAULT_DISCIPLINA or UPDATED_DISCIPLINA
+        defaultPlanoCurricularShouldBeFound("disciplina.in=" + DEFAULT_DISCIPLINA + "," + UPDATED_DISCIPLINA);
+
+        // Get all the planoCurricularList where disciplina equals to UPDATED_DISCIPLINA
+        defaultPlanoCurricularShouldNotBeFound("disciplina.in=" + UPDATED_DISCIPLINA);
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByDisciplinaIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where disciplina is not null
+        defaultPlanoCurricularShouldBeFound("disciplina.specified=true");
+
+        // Get all the planoCurricularList where disciplina is null
+        defaultPlanoCurricularShouldNotBeFound("disciplina.specified=false");
+    }
+                @Test
+    @Transactional
+    public void getAllPlanoCurricularsByDisciplinaContainsSomething() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where disciplina contains DEFAULT_DISCIPLINA
+        defaultPlanoCurricularShouldBeFound("disciplina.contains=" + DEFAULT_DISCIPLINA);
+
+        // Get all the planoCurricularList where disciplina contains UPDATED_DISCIPLINA
+        defaultPlanoCurricularShouldNotBeFound("disciplina.contains=" + UPDATED_DISCIPLINA);
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByDisciplinaNotContainsSomething() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where disciplina does not contain DEFAULT_DISCIPLINA
+        defaultPlanoCurricularShouldNotBeFound("disciplina.doesNotContain=" + DEFAULT_DISCIPLINA);
+
+        // Get all the planoCurricularList where disciplina does not contain UPDATED_DISCIPLINA
+        defaultPlanoCurricularShouldBeFound("disciplina.doesNotContain=" + UPDATED_DISCIPLINA);
+    }
+
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByClasseIsEqualToSomething() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where classe equals to DEFAULT_CLASSE
+        defaultPlanoCurricularShouldBeFound("classe.equals=" + DEFAULT_CLASSE);
+
+        // Get all the planoCurricularList where classe equals to UPDATED_CLASSE
+        defaultPlanoCurricularShouldNotBeFound("classe.equals=" + UPDATED_CLASSE);
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByClasseIsNotEqualToSomething() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where classe not equals to DEFAULT_CLASSE
+        defaultPlanoCurricularShouldNotBeFound("classe.notEquals=" + DEFAULT_CLASSE);
+
+        // Get all the planoCurricularList where classe not equals to UPDATED_CLASSE
+        defaultPlanoCurricularShouldBeFound("classe.notEquals=" + UPDATED_CLASSE);
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByClasseIsInShouldWork() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where classe in DEFAULT_CLASSE or UPDATED_CLASSE
+        defaultPlanoCurricularShouldBeFound("classe.in=" + DEFAULT_CLASSE + "," + UPDATED_CLASSE);
+
+        // Get all the planoCurricularList where classe equals to UPDATED_CLASSE
+        defaultPlanoCurricularShouldNotBeFound("classe.in=" + UPDATED_CLASSE);
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByClasseIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where classe is not null
+        defaultPlanoCurricularShouldBeFound("classe.specified=true");
+
+        // Get all the planoCurricularList where classe is null
+        defaultPlanoCurricularShouldNotBeFound("classe.specified=false");
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByClasseIsGreaterThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where classe is greater than or equal to DEFAULT_CLASSE
+        defaultPlanoCurricularShouldBeFound("classe.greaterThanOrEqual=" + DEFAULT_CLASSE);
+
+        // Get all the planoCurricularList where classe is greater than or equal to UPDATED_CLASSE
+        defaultPlanoCurricularShouldNotBeFound("classe.greaterThanOrEqual=" + UPDATED_CLASSE);
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByClasseIsLessThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where classe is less than or equal to DEFAULT_CLASSE
+        defaultPlanoCurricularShouldBeFound("classe.lessThanOrEqual=" + DEFAULT_CLASSE);
+
+        // Get all the planoCurricularList where classe is less than or equal to SMALLER_CLASSE
+        defaultPlanoCurricularShouldNotBeFound("classe.lessThanOrEqual=" + SMALLER_CLASSE);
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByClasseIsLessThanSomething() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where classe is less than DEFAULT_CLASSE
+        defaultPlanoCurricularShouldNotBeFound("classe.lessThan=" + DEFAULT_CLASSE);
+
+        // Get all the planoCurricularList where classe is less than UPDATED_CLASSE
+        defaultPlanoCurricularShouldBeFound("classe.lessThan=" + UPDATED_CLASSE);
+    }
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByClasseIsGreaterThanSomething() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+
+        // Get all the planoCurricularList where classe is greater than DEFAULT_CLASSE
+        defaultPlanoCurricularShouldNotBeFound("classe.greaterThan=" + DEFAULT_CLASSE);
+
+        // Get all the planoCurricularList where classe is greater than SMALLER_CLASSE
+        defaultPlanoCurricularShouldBeFound("classe.greaterThan=" + SMALLER_CLASSE);
+    }
+
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByPlanoAulaIsEqualToSomething() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+        PlanoAula planoAula = PlanoAulaResourceIT.createEntity(em);
+        em.persist(planoAula);
+        em.flush();
+        planoCurricular.addPlanoAula(planoAula);
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+        Long planoAulaId = planoAula.getId();
+
+        // Get all the planoCurricularList where planoAula equals to planoAulaId
+        defaultPlanoCurricularShouldBeFound("planoAulaId.equals=" + planoAulaId);
+
+        // Get all the planoCurricularList where planoAula equals to planoAulaId + 1
+        defaultPlanoCurricularShouldNotBeFound("planoAulaId.equals=" + (planoAulaId + 1));
+    }
+
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByDosificacaoIsEqualToSomething() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+        Dosificacao dosificacao = DosificacaoResourceIT.createEntity(em);
+        em.persist(dosificacao);
+        em.flush();
+        planoCurricular.addDosificacao(dosificacao);
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+        Long dosificacaoId = dosificacao.getId();
+
+        // Get all the planoCurricularList where dosificacao equals to dosificacaoId
+        defaultPlanoCurricularShouldBeFound("dosificacaoId.equals=" + dosificacaoId);
+
+        // Get all the planoCurricularList where dosificacao equals to dosificacaoId + 1
+        defaultPlanoCurricularShouldNotBeFound("dosificacaoId.equals=" + (dosificacaoId + 1));
+    }
+
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByNotaIsEqualToSomething() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+        Nota nota = NotaResourceIT.createEntity(em);
+        em.persist(nota);
+        em.flush();
+        planoCurricular.addNota(nota);
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+        Long notaId = nota.getId();
+
+        // Get all the planoCurricularList where nota equals to notaId
+        defaultPlanoCurricularShouldBeFound("notaId.equals=" + notaId);
+
+        // Get all the planoCurricularList where nota equals to notaId + 1
+        defaultPlanoCurricularShouldNotBeFound("notaId.equals=" + (notaId + 1));
+    }
+
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByAulaIsEqualToSomething() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+        Aula aula = AulaResourceIT.createEntity(em);
+        em.persist(aula);
+        em.flush();
+        planoCurricular.addAula(aula);
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+        Long aulaId = aula.getId();
+
+        // Get all the planoCurricularList where aula equals to aulaId
+        defaultPlanoCurricularShouldBeFound("aulaId.equals=" + aulaId);
+
+        // Get all the planoCurricularList where aula equals to aulaId + 1
+        defaultPlanoCurricularShouldNotBeFound("aulaId.equals=" + (aulaId + 1));
+    }
+
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByHorarioIsEqualToSomething() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+        Horario horario = HorarioResourceIT.createEntity(em);
+        em.persist(horario);
+        em.flush();
+        planoCurricular.addHorario(horario);
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+        Long horarioId = horario.getId();
+
+        // Get all the planoCurricularList where horario equals to horarioId
+        defaultPlanoCurricularShouldBeFound("horarioId.equals=" + horarioId);
+
+        // Get all the planoCurricularList where horario equals to horarioId + 1
+        defaultPlanoCurricularShouldNotBeFound("horarioId.equals=" + (horarioId + 1));
+    }
+
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByTesteConhecimentoIsEqualToSomething() throws Exception {
+        // Initialize the database
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+        TesteConhecimento testeConhecimento = TesteConhecimentoResourceIT.createEntity(em);
+        em.persist(testeConhecimento);
+        em.flush();
+        planoCurricular.addTesteConhecimento(testeConhecimento);
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+        Long testeConhecimentoId = testeConhecimento.getId();
+
+        // Get all the planoCurricularList where testeConhecimento equals to testeConhecimentoId
+        defaultPlanoCurricularShouldBeFound("testeConhecimentoId.equals=" + testeConhecimentoId);
+
+        // Get all the planoCurricularList where testeConhecimento equals to testeConhecimentoId + 1
+        defaultPlanoCurricularShouldNotBeFound("testeConhecimentoId.equals=" + (testeConhecimentoId + 1));
+    }
+
+
+    @Test
+    @Transactional
+    public void getAllPlanoCurricularsByCursoIsEqualToSomething() throws Exception {
+        // Get already existing entity
+        Curso curso = planoCurricular.getCurso();
+        planoCurricularRepository.saveAndFlush(planoCurricular);
+        Long cursoId = curso.getId();
+
+        // Get all the planoCurricularList where curso equals to cursoId
+        defaultPlanoCurricularShouldBeFound("cursoId.equals=" + cursoId);
+
+        // Get all the planoCurricularList where curso equals to cursoId + 1
+        defaultPlanoCurricularShouldNotBeFound("cursoId.equals=" + (cursoId + 1));
+    }
+
+    /**
+     * Executes the search, and checks that the default entity is returned.
+     */
+    private void defaultPlanoCurricularShouldBeFound(String filter) throws Exception {
+        restPlanoCurricularMockMvc.perform(get("/api/plano-curriculars?sort=id,desc&" + filter))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(planoCurricular.getId().intValue())))
+            .andExpect(jsonPath("$.[*].descricao").value(hasItem(DEFAULT_DESCRICAO)))
+            .andExpect(jsonPath("$.[*].terminal").value(hasItem(DEFAULT_TERMINAL.booleanValue())))
+            .andExpect(jsonPath("$.[*].tempoSemanal").value(hasItem(DEFAULT_TEMPO_SEMANAL)))
+            .andExpect(jsonPath("$.[*].periodoLectivo").value(hasItem(DEFAULT_PERIODO_LECTIVO)))
+            .andExpect(jsonPath("$.[*].componente").value(hasItem(DEFAULT_COMPONENTE)))
+            .andExpect(jsonPath("$.[*].disciplina").value(hasItem(DEFAULT_DISCIPLINA)))
+            .andExpect(jsonPath("$.[*].classe").value(hasItem(DEFAULT_CLASSE)));
+
+        // Check, that the count call also returns 1
+        restPlanoCurricularMockMvc.perform(get("/api/plano-curriculars/count?sort=id,desc&" + filter))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().string("1"));
+    }
+
+    /**
+     * Executes the search, and checks that the default entity is not returned.
+     */
+    private void defaultPlanoCurricularShouldNotBeFound(String filter) throws Exception {
+        restPlanoCurricularMockMvc.perform(get("/api/plano-curriculars?sort=id,desc&" + filter))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$").isEmpty());
+
+        // Check, that the count call also returns 0
+        restPlanoCurricularMockMvc.perform(get("/api/plano-curriculars/count?sort=id,desc&" + filter))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().string("0"));
+    }
+
 
     @Test
     @Transactional

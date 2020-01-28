@@ -3,6 +3,8 @@ package com.ravunana.educacao.pedagogico.web.rest;
 import com.ravunana.educacao.pedagogico.service.NotaService;
 import com.ravunana.educacao.pedagogico.web.rest.errors.BadRequestAlertException;
 import com.ravunana.educacao.pedagogico.service.dto.NotaDTO;
+import com.ravunana.educacao.pedagogico.service.dto.NotaCriteria;
+import com.ravunana.educacao.pedagogico.service.NotaQueryService;
 
 import io.github.jhipster.web.util.HeaderUtil;
 import io.github.jhipster.web.util.PaginationUtil;
@@ -44,8 +46,11 @@ public class NotaResource {
 
     private final NotaService notaService;
 
-    public NotaResource(NotaService notaService) {
+    private final NotaQueryService notaQueryService;
+
+    public NotaResource(NotaService notaService, NotaQueryService notaQueryService) {
         this.notaService = notaService;
+        this.notaQueryService = notaQueryService;
     }
 
     /**
@@ -94,14 +99,27 @@ public class NotaResource {
 
      * @param pageable the pagination information.
 
+     * @param criteria the criteria which the requested entities should match.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of notas in body.
      */
     @GetMapping("/notas")
-    public ResponseEntity<List<NotaDTO>> getAllNotas(Pageable pageable) {
-        log.debug("REST request to get a page of Notas");
-        Page<NotaDTO> page = notaService.findAll(pageable);
+    public ResponseEntity<List<NotaDTO>> getAllNotas(NotaCriteria criteria, Pageable pageable) {
+        log.debug("REST request to get Notas by criteria: {}", criteria);
+        Page<NotaDTO> page = notaQueryService.findByCriteria(criteria, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
+    }
+
+    /**
+    * {@code GET  /notas/count} : count all the notas.
+    *
+    * @param criteria the criteria which the requested entities should match.
+    * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
+    */
+    @GetMapping("/notas/count")
+    public ResponseEntity<Long> countNotas(NotaCriteria criteria) {
+        log.debug("REST request to count Notas by criteria: {}", criteria);
+        return ResponseEntity.ok().body(notaQueryService.countByCriteria(criteria));
     }
 
     /**

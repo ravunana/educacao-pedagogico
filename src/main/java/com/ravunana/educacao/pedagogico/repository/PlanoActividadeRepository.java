@@ -10,6 +10,6 @@ import org.springframework.stereotype.Repository;
  */
 @SuppressWarnings("unused")
 @Repository
-public interface PlanoActividadeRepository extends JpaRepository<PlanoActividade, Long> {
+public interface PlanoActividadeRepository extends JpaRepository<PlanoActividade, Long>, JpaSpecificationExecutor<PlanoActividade> {
 
 }

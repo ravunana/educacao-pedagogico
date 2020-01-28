@@ -74,7 +74,7 @@
     "dto": "mapstruct",
     "pagination": "pagination",
     "service": "serviceClass",
-    "jpaMetamodelFiltering": false,
+    "jpaMetamodelFiltering": true,
     "fluentMethods": true,
     "readOnly": false,
     "clientRootFolder": "pedagogico",

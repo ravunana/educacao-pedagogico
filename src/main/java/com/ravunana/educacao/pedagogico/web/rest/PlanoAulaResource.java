@@ -3,6 +3,8 @@ package com.ravunana.educacao.pedagogico.web.rest;
 import com.ravunana.educacao.pedagogico.service.PlanoAulaService;
 import com.ravunana.educacao.pedagogico.web.rest.errors.BadRequestAlertException;
 import com.ravunana.educacao.pedagogico.service.dto.PlanoAulaDTO;
+import com.ravunana.educacao.pedagogico.service.dto.PlanoAulaCriteria;
+import com.ravunana.educacao.pedagogico.service.PlanoAulaQueryService;
 
 import io.github.jhipster.web.util.HeaderUtil;
 import io.github.jhipster.web.util.PaginationUtil;
@@ -44,8 +46,11 @@ public class PlanoAulaResource {
 
     private final PlanoAulaService planoAulaService;
 
-    public PlanoAulaResource(PlanoAulaService planoAulaService) {
+    private final PlanoAulaQueryService planoAulaQueryService;
+
+    public PlanoAulaResource(PlanoAulaService planoAulaService, PlanoAulaQueryService planoAulaQueryService) {
         this.planoAulaService = planoAulaService;
+        this.planoAulaQueryService = planoAulaQueryService;
     }
 
     /**
@@ -93,20 +98,28 @@ public class PlanoAulaResource {
      *
 
      * @param pageable the pagination information.
-     * @param eagerload flag to eager load entities from relationships (This is applicable for many-to-many).
+
+     * @param criteria the criteria which the requested entities should match.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of planoAulas in body.
      */
     @GetMapping("/plano-aulas")
-    public ResponseEntity<List<PlanoAulaDTO>> getAllPlanoAulas(Pageable pageable, @RequestParam(required = false, defaultValue = "false") boolean eagerload) {
-        log.debug("REST request to get a page of PlanoAulas");
-        Page<PlanoAulaDTO> page;
-        if (eagerload) {
-            page = planoAulaService.findAllWithEagerRelationships(pageable);
-        } else {
-            page = planoAulaService.findAll(pageable);
-        }
+    public ResponseEntity<List<PlanoAulaDTO>> getAllPlanoAulas(PlanoAulaCriteria criteria, Pageable pageable) {
+        log.debug("REST request to get PlanoAulas by criteria: {}", criteria);
+        Page<PlanoAulaDTO> page = planoAulaQueryService.findByCriteria(criteria, pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
+    }
+
+    /**
+    * {@code GET  /plano-aulas/count} : count all the planoAulas.
+    *
+    * @param criteria the criteria which the requested entities should match.
+    * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
+    */
+    @GetMapping("/plano-aulas/count")
+    public ResponseEntity<Long> countPlanoAulas(PlanoAulaCriteria criteria) {
+        log.debug("REST request to count PlanoAulas by criteria: {}", criteria);
+        return ResponseEntity.ok().body(planoAulaQueryService.countByCriteria(criteria));
     }
 
     /**

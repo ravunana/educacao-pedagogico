@@ -12,6 +12,8 @@ import com.ravunana.educacao.pedagogico.service.NotaService;
 import com.ravunana.educacao.pedagogico.service.dto.NotaDTO;
 import com.ravunana.educacao.pedagogico.service.mapper.NotaMapper;
 import com.ravunana.educacao.pedagogico.web.rest.errors.ExceptionTranslator;
+import com.ravunana.educacao.pedagogico.service.dto.NotaCriteria;
+import com.ravunana.educacao.pedagogico.service.NotaQueryService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -61,30 +63,39 @@ public class NotaResourceIT {
 
     private static final Integer DEFAULT_ANO_LECTIVO = 1;
     private static final Integer UPDATED_ANO_LECTIVO = 2;
+    private static final Integer SMALLER_ANO_LECTIVO = 1 - 1;
 
     private static final Integer DEFAULT_FALTA_JUSTIFICADA = 1;
     private static final Integer UPDATED_FALTA_JUSTIFICADA = 2;
+    private static final Integer SMALLER_FALTA_JUSTIFICADA = 1 - 1;
 
     private static final Integer DEFAULT_FALTA_INJUSTIFICADA = 1;
     private static final Integer UPDATED_FALTA_INJUSTIFICADA = 2;
+    private static final Integer SMALLER_FALTA_INJUSTIFICADA = 1 - 1;
 
     private static final Double DEFAULT_AVALIACAO_CONTINUCA = 0D;
     private static final Double UPDATED_AVALIACAO_CONTINUCA = 1D;
+    private static final Double SMALLER_AVALIACAO_CONTINUCA = 0D - 1D;
 
     private static final Double DEFAULT_PRIMEIRA_PROVA = 0D;
     private static final Double UPDATED_PRIMEIRA_PROVA = 1D;
+    private static final Double SMALLER_PRIMEIRA_PROVA = 0D - 1D;
 
     private static final Double DEFAULT_SEGUNDA_PROVA = 0D;
     private static final Double UPDATED_SEGUNDA_PROVA = 1D;
+    private static final Double SMALLER_SEGUNDA_PROVA = 0D - 1D;
 
     private static final Double DEFAULT_EXAME = 0D;
     private static final Double UPDATED_EXAME = 1D;
+    private static final Double SMALLER_EXAME = 0D - 1D;
 
     private static final Double DEFAULT_RECURSO = 0D;
     private static final Double UPDATED_RECURSO = 1D;
+    private static final Double SMALLER_RECURSO = 0D - 1D;
 
     private static final Double DEFAULT_EXAME_ESPECIAL = 0D;
     private static final Double UPDATED_EXAME_ESPECIAL = 1D;
+    private static final Double SMALLER_EXAME_ESPECIAL = 0D - 1D;
 
     private static final byte[] DEFAULT_PROVA = TestUtil.createByteArray(1, "0");
     private static final byte[] UPDATED_PROVA = TestUtil.createByteArray(1, "1");
@@ -112,6 +123,9 @@ public class NotaResourceIT {
     private NotaSearchRepository mockNotaSearchRepository;
 
     @Autowired
+    private NotaQueryService notaQueryService;
+
+    @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
 
     @Autowired
@@ -133,7 +147,7 @@ public class NotaResourceIT {
     @BeforeEach
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        final NotaResource notaResource = new NotaResource(notaService);
+        final NotaResource notaResource = new NotaResource(notaService, notaQueryService);
         this.restNotaMockMvc = MockMvcBuilders.standaloneSetup(notaResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
@@ -416,6 +430,1458 @@ public class NotaResourceIT {
             .andExpect(jsonPath("$.prova").value(Base64Utils.encodeToString(DEFAULT_PROVA)))
             .andExpect(jsonPath("$.situacao").value(DEFAULT_SITUACAO));
     }
+
+
+    @Test
+    @Transactional
+    public void getNotasByIdFiltering() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        Long id = nota.getId();
+
+        defaultNotaShouldBeFound("id.equals=" + id);
+        defaultNotaShouldNotBeFound("id.notEquals=" + id);
+
+        defaultNotaShouldBeFound("id.greaterThanOrEqual=" + id);
+        defaultNotaShouldNotBeFound("id.greaterThan=" + id);
+
+        defaultNotaShouldBeFound("id.lessThanOrEqual=" + id);
+        defaultNotaShouldNotBeFound("id.lessThan=" + id);
+    }
+
+
+    @Test
+    @Transactional
+    public void getAllNotasByNumeroProcessoIsEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where numeroProcesso equals to DEFAULT_NUMERO_PROCESSO
+        defaultNotaShouldBeFound("numeroProcesso.equals=" + DEFAULT_NUMERO_PROCESSO);
+
+        // Get all the notaList where numeroProcesso equals to UPDATED_NUMERO_PROCESSO
+        defaultNotaShouldNotBeFound("numeroProcesso.equals=" + UPDATED_NUMERO_PROCESSO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByNumeroProcessoIsNotEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where numeroProcesso not equals to DEFAULT_NUMERO_PROCESSO
+        defaultNotaShouldNotBeFound("numeroProcesso.notEquals=" + DEFAULT_NUMERO_PROCESSO);
+
+        // Get all the notaList where numeroProcesso not equals to UPDATED_NUMERO_PROCESSO
+        defaultNotaShouldBeFound("numeroProcesso.notEquals=" + UPDATED_NUMERO_PROCESSO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByNumeroProcessoIsInShouldWork() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where numeroProcesso in DEFAULT_NUMERO_PROCESSO or UPDATED_NUMERO_PROCESSO
+        defaultNotaShouldBeFound("numeroProcesso.in=" + DEFAULT_NUMERO_PROCESSO + "," + UPDATED_NUMERO_PROCESSO);
+
+        // Get all the notaList where numeroProcesso equals to UPDATED_NUMERO_PROCESSO
+        defaultNotaShouldNotBeFound("numeroProcesso.in=" + UPDATED_NUMERO_PROCESSO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByNumeroProcessoIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where numeroProcesso is not null
+        defaultNotaShouldBeFound("numeroProcesso.specified=true");
+
+        // Get all the notaList where numeroProcesso is null
+        defaultNotaShouldNotBeFound("numeroProcesso.specified=false");
+    }
+                @Test
+    @Transactional
+    public void getAllNotasByNumeroProcessoContainsSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where numeroProcesso contains DEFAULT_NUMERO_PROCESSO
+        defaultNotaShouldBeFound("numeroProcesso.contains=" + DEFAULT_NUMERO_PROCESSO);
+
+        // Get all the notaList where numeroProcesso contains UPDATED_NUMERO_PROCESSO
+        defaultNotaShouldNotBeFound("numeroProcesso.contains=" + UPDATED_NUMERO_PROCESSO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByNumeroProcessoNotContainsSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where numeroProcesso does not contain DEFAULT_NUMERO_PROCESSO
+        defaultNotaShouldNotBeFound("numeroProcesso.doesNotContain=" + DEFAULT_NUMERO_PROCESSO);
+
+        // Get all the notaList where numeroProcesso does not contain UPDATED_NUMERO_PROCESSO
+        defaultNotaShouldBeFound("numeroProcesso.doesNotContain=" + UPDATED_NUMERO_PROCESSO);
+    }
+
+
+    @Test
+    @Transactional
+    public void getAllNotasByNomeAlunoIsEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where nomeAluno equals to DEFAULT_NOME_ALUNO
+        defaultNotaShouldBeFound("nomeAluno.equals=" + DEFAULT_NOME_ALUNO);
+
+        // Get all the notaList where nomeAluno equals to UPDATED_NOME_ALUNO
+        defaultNotaShouldNotBeFound("nomeAluno.equals=" + UPDATED_NOME_ALUNO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByNomeAlunoIsNotEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where nomeAluno not equals to DEFAULT_NOME_ALUNO
+        defaultNotaShouldNotBeFound("nomeAluno.notEquals=" + DEFAULT_NOME_ALUNO);
+
+        // Get all the notaList where nomeAluno not equals to UPDATED_NOME_ALUNO
+        defaultNotaShouldBeFound("nomeAluno.notEquals=" + UPDATED_NOME_ALUNO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByNomeAlunoIsInShouldWork() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where nomeAluno in DEFAULT_NOME_ALUNO or UPDATED_NOME_ALUNO
+        defaultNotaShouldBeFound("nomeAluno.in=" + DEFAULT_NOME_ALUNO + "," + UPDATED_NOME_ALUNO);
+
+        // Get all the notaList where nomeAluno equals to UPDATED_NOME_ALUNO
+        defaultNotaShouldNotBeFound("nomeAluno.in=" + UPDATED_NOME_ALUNO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByNomeAlunoIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where nomeAluno is not null
+        defaultNotaShouldBeFound("nomeAluno.specified=true");
+
+        // Get all the notaList where nomeAluno is null
+        defaultNotaShouldNotBeFound("nomeAluno.specified=false");
+    }
+                @Test
+    @Transactional
+    public void getAllNotasByNomeAlunoContainsSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where nomeAluno contains DEFAULT_NOME_ALUNO
+        defaultNotaShouldBeFound("nomeAluno.contains=" + DEFAULT_NOME_ALUNO);
+
+        // Get all the notaList where nomeAluno contains UPDATED_NOME_ALUNO
+        defaultNotaShouldNotBeFound("nomeAluno.contains=" + UPDATED_NOME_ALUNO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByNomeAlunoNotContainsSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where nomeAluno does not contain DEFAULT_NOME_ALUNO
+        defaultNotaShouldNotBeFound("nomeAluno.doesNotContain=" + DEFAULT_NOME_ALUNO);
+
+        // Get all the notaList where nomeAluno does not contain UPDATED_NOME_ALUNO
+        defaultNotaShouldBeFound("nomeAluno.doesNotContain=" + UPDATED_NOME_ALUNO);
+    }
+
+
+    @Test
+    @Transactional
+    public void getAllNotasByDisciplinaIsEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where disciplina equals to DEFAULT_DISCIPLINA
+        defaultNotaShouldBeFound("disciplina.equals=" + DEFAULT_DISCIPLINA);
+
+        // Get all the notaList where disciplina equals to UPDATED_DISCIPLINA
+        defaultNotaShouldNotBeFound("disciplina.equals=" + UPDATED_DISCIPLINA);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByDisciplinaIsNotEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where disciplina not equals to DEFAULT_DISCIPLINA
+        defaultNotaShouldNotBeFound("disciplina.notEquals=" + DEFAULT_DISCIPLINA);
+
+        // Get all the notaList where disciplina not equals to UPDATED_DISCIPLINA
+        defaultNotaShouldBeFound("disciplina.notEquals=" + UPDATED_DISCIPLINA);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByDisciplinaIsInShouldWork() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where disciplina in DEFAULT_DISCIPLINA or UPDATED_DISCIPLINA
+        defaultNotaShouldBeFound("disciplina.in=" + DEFAULT_DISCIPLINA + "," + UPDATED_DISCIPLINA);
+
+        // Get all the notaList where disciplina equals to UPDATED_DISCIPLINA
+        defaultNotaShouldNotBeFound("disciplina.in=" + UPDATED_DISCIPLINA);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByDisciplinaIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where disciplina is not null
+        defaultNotaShouldBeFound("disciplina.specified=true");
+
+        // Get all the notaList where disciplina is null
+        defaultNotaShouldNotBeFound("disciplina.specified=false");
+    }
+                @Test
+    @Transactional
+    public void getAllNotasByDisciplinaContainsSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where disciplina contains DEFAULT_DISCIPLINA
+        defaultNotaShouldBeFound("disciplina.contains=" + DEFAULT_DISCIPLINA);
+
+        // Get all the notaList where disciplina contains UPDATED_DISCIPLINA
+        defaultNotaShouldNotBeFound("disciplina.contains=" + UPDATED_DISCIPLINA);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByDisciplinaNotContainsSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where disciplina does not contain DEFAULT_DISCIPLINA
+        defaultNotaShouldNotBeFound("disciplina.doesNotContain=" + DEFAULT_DISCIPLINA);
+
+        // Get all the notaList where disciplina does not contain UPDATED_DISCIPLINA
+        defaultNotaShouldBeFound("disciplina.doesNotContain=" + UPDATED_DISCIPLINA);
+    }
+
+
+    @Test
+    @Transactional
+    public void getAllNotasByPeridoLectivoIsEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where peridoLectivo equals to DEFAULT_PERIDO_LECTIVO
+        defaultNotaShouldBeFound("peridoLectivo.equals=" + DEFAULT_PERIDO_LECTIVO);
+
+        // Get all the notaList where peridoLectivo equals to UPDATED_PERIDO_LECTIVO
+        defaultNotaShouldNotBeFound("peridoLectivo.equals=" + UPDATED_PERIDO_LECTIVO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByPeridoLectivoIsNotEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where peridoLectivo not equals to DEFAULT_PERIDO_LECTIVO
+        defaultNotaShouldNotBeFound("peridoLectivo.notEquals=" + DEFAULT_PERIDO_LECTIVO);
+
+        // Get all the notaList where peridoLectivo not equals to UPDATED_PERIDO_LECTIVO
+        defaultNotaShouldBeFound("peridoLectivo.notEquals=" + UPDATED_PERIDO_LECTIVO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByPeridoLectivoIsInShouldWork() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where peridoLectivo in DEFAULT_PERIDO_LECTIVO or UPDATED_PERIDO_LECTIVO
+        defaultNotaShouldBeFound("peridoLectivo.in=" + DEFAULT_PERIDO_LECTIVO + "," + UPDATED_PERIDO_LECTIVO);
+
+        // Get all the notaList where peridoLectivo equals to UPDATED_PERIDO_LECTIVO
+        defaultNotaShouldNotBeFound("peridoLectivo.in=" + UPDATED_PERIDO_LECTIVO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByPeridoLectivoIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where peridoLectivo is not null
+        defaultNotaShouldBeFound("peridoLectivo.specified=true");
+
+        // Get all the notaList where peridoLectivo is null
+        defaultNotaShouldNotBeFound("peridoLectivo.specified=false");
+    }
+                @Test
+    @Transactional
+    public void getAllNotasByPeridoLectivoContainsSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where peridoLectivo contains DEFAULT_PERIDO_LECTIVO
+        defaultNotaShouldBeFound("peridoLectivo.contains=" + DEFAULT_PERIDO_LECTIVO);
+
+        // Get all the notaList where peridoLectivo contains UPDATED_PERIDO_LECTIVO
+        defaultNotaShouldNotBeFound("peridoLectivo.contains=" + UPDATED_PERIDO_LECTIVO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByPeridoLectivoNotContainsSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where peridoLectivo does not contain DEFAULT_PERIDO_LECTIVO
+        defaultNotaShouldNotBeFound("peridoLectivo.doesNotContain=" + DEFAULT_PERIDO_LECTIVO);
+
+        // Get all the notaList where peridoLectivo does not contain UPDATED_PERIDO_LECTIVO
+        defaultNotaShouldBeFound("peridoLectivo.doesNotContain=" + UPDATED_PERIDO_LECTIVO);
+    }
+
+
+    @Test
+    @Transactional
+    public void getAllNotasByAnoLectivoIsEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where anoLectivo equals to DEFAULT_ANO_LECTIVO
+        defaultNotaShouldBeFound("anoLectivo.equals=" + DEFAULT_ANO_LECTIVO);
+
+        // Get all the notaList where anoLectivo equals to UPDATED_ANO_LECTIVO
+        defaultNotaShouldNotBeFound("anoLectivo.equals=" + UPDATED_ANO_LECTIVO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByAnoLectivoIsNotEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where anoLectivo not equals to DEFAULT_ANO_LECTIVO
+        defaultNotaShouldNotBeFound("anoLectivo.notEquals=" + DEFAULT_ANO_LECTIVO);
+
+        // Get all the notaList where anoLectivo not equals to UPDATED_ANO_LECTIVO
+        defaultNotaShouldBeFound("anoLectivo.notEquals=" + UPDATED_ANO_LECTIVO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByAnoLectivoIsInShouldWork() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where anoLectivo in DEFAULT_ANO_LECTIVO or UPDATED_ANO_LECTIVO
+        defaultNotaShouldBeFound("anoLectivo.in=" + DEFAULT_ANO_LECTIVO + "," + UPDATED_ANO_LECTIVO);
+
+        // Get all the notaList where anoLectivo equals to UPDATED_ANO_LECTIVO
+        defaultNotaShouldNotBeFound("anoLectivo.in=" + UPDATED_ANO_LECTIVO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByAnoLectivoIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where anoLectivo is not null
+        defaultNotaShouldBeFound("anoLectivo.specified=true");
+
+        // Get all the notaList where anoLectivo is null
+        defaultNotaShouldNotBeFound("anoLectivo.specified=false");
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByAnoLectivoIsGreaterThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where anoLectivo is greater than or equal to DEFAULT_ANO_LECTIVO
+        defaultNotaShouldBeFound("anoLectivo.greaterThanOrEqual=" + DEFAULT_ANO_LECTIVO);
+
+        // Get all the notaList where anoLectivo is greater than or equal to UPDATED_ANO_LECTIVO
+        defaultNotaShouldNotBeFound("anoLectivo.greaterThanOrEqual=" + UPDATED_ANO_LECTIVO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByAnoLectivoIsLessThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where anoLectivo is less than or equal to DEFAULT_ANO_LECTIVO
+        defaultNotaShouldBeFound("anoLectivo.lessThanOrEqual=" + DEFAULT_ANO_LECTIVO);
+
+        // Get all the notaList where anoLectivo is less than or equal to SMALLER_ANO_LECTIVO
+        defaultNotaShouldNotBeFound("anoLectivo.lessThanOrEqual=" + SMALLER_ANO_LECTIVO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByAnoLectivoIsLessThanSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where anoLectivo is less than DEFAULT_ANO_LECTIVO
+        defaultNotaShouldNotBeFound("anoLectivo.lessThan=" + DEFAULT_ANO_LECTIVO);
+
+        // Get all the notaList where anoLectivo is less than UPDATED_ANO_LECTIVO
+        defaultNotaShouldBeFound("anoLectivo.lessThan=" + UPDATED_ANO_LECTIVO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByAnoLectivoIsGreaterThanSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where anoLectivo is greater than DEFAULT_ANO_LECTIVO
+        defaultNotaShouldNotBeFound("anoLectivo.greaterThan=" + DEFAULT_ANO_LECTIVO);
+
+        // Get all the notaList where anoLectivo is greater than SMALLER_ANO_LECTIVO
+        defaultNotaShouldBeFound("anoLectivo.greaterThan=" + SMALLER_ANO_LECTIVO);
+    }
+
+
+    @Test
+    @Transactional
+    public void getAllNotasByFaltaJustificadaIsEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where faltaJustificada equals to DEFAULT_FALTA_JUSTIFICADA
+        defaultNotaShouldBeFound("faltaJustificada.equals=" + DEFAULT_FALTA_JUSTIFICADA);
+
+        // Get all the notaList where faltaJustificada equals to UPDATED_FALTA_JUSTIFICADA
+        defaultNotaShouldNotBeFound("faltaJustificada.equals=" + UPDATED_FALTA_JUSTIFICADA);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByFaltaJustificadaIsNotEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where faltaJustificada not equals to DEFAULT_FALTA_JUSTIFICADA
+        defaultNotaShouldNotBeFound("faltaJustificada.notEquals=" + DEFAULT_FALTA_JUSTIFICADA);
+
+        // Get all the notaList where faltaJustificada not equals to UPDATED_FALTA_JUSTIFICADA
+        defaultNotaShouldBeFound("faltaJustificada.notEquals=" + UPDATED_FALTA_JUSTIFICADA);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByFaltaJustificadaIsInShouldWork() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where faltaJustificada in DEFAULT_FALTA_JUSTIFICADA or UPDATED_FALTA_JUSTIFICADA
+        defaultNotaShouldBeFound("faltaJustificada.in=" + DEFAULT_FALTA_JUSTIFICADA + "," + UPDATED_FALTA_JUSTIFICADA);
+
+        // Get all the notaList where faltaJustificada equals to UPDATED_FALTA_JUSTIFICADA
+        defaultNotaShouldNotBeFound("faltaJustificada.in=" + UPDATED_FALTA_JUSTIFICADA);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByFaltaJustificadaIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where faltaJustificada is not null
+        defaultNotaShouldBeFound("faltaJustificada.specified=true");
+
+        // Get all the notaList where faltaJustificada is null
+        defaultNotaShouldNotBeFound("faltaJustificada.specified=false");
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByFaltaJustificadaIsGreaterThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where faltaJustificada is greater than or equal to DEFAULT_FALTA_JUSTIFICADA
+        defaultNotaShouldBeFound("faltaJustificada.greaterThanOrEqual=" + DEFAULT_FALTA_JUSTIFICADA);
+
+        // Get all the notaList where faltaJustificada is greater than or equal to UPDATED_FALTA_JUSTIFICADA
+        defaultNotaShouldNotBeFound("faltaJustificada.greaterThanOrEqual=" + UPDATED_FALTA_JUSTIFICADA);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByFaltaJustificadaIsLessThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where faltaJustificada is less than or equal to DEFAULT_FALTA_JUSTIFICADA
+        defaultNotaShouldBeFound("faltaJustificada.lessThanOrEqual=" + DEFAULT_FALTA_JUSTIFICADA);
+
+        // Get all the notaList where faltaJustificada is less than or equal to SMALLER_FALTA_JUSTIFICADA
+        defaultNotaShouldNotBeFound("faltaJustificada.lessThanOrEqual=" + SMALLER_FALTA_JUSTIFICADA);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByFaltaJustificadaIsLessThanSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where faltaJustificada is less than DEFAULT_FALTA_JUSTIFICADA
+        defaultNotaShouldNotBeFound("faltaJustificada.lessThan=" + DEFAULT_FALTA_JUSTIFICADA);
+
+        // Get all the notaList where faltaJustificada is less than UPDATED_FALTA_JUSTIFICADA
+        defaultNotaShouldBeFound("faltaJustificada.lessThan=" + UPDATED_FALTA_JUSTIFICADA);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByFaltaJustificadaIsGreaterThanSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where faltaJustificada is greater than DEFAULT_FALTA_JUSTIFICADA
+        defaultNotaShouldNotBeFound("faltaJustificada.greaterThan=" + DEFAULT_FALTA_JUSTIFICADA);
+
+        // Get all the notaList where faltaJustificada is greater than SMALLER_FALTA_JUSTIFICADA
+        defaultNotaShouldBeFound("faltaJustificada.greaterThan=" + SMALLER_FALTA_JUSTIFICADA);
+    }
+
+
+    @Test
+    @Transactional
+    public void getAllNotasByFaltaInjustificadaIsEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where faltaInjustificada equals to DEFAULT_FALTA_INJUSTIFICADA
+        defaultNotaShouldBeFound("faltaInjustificada.equals=" + DEFAULT_FALTA_INJUSTIFICADA);
+
+        // Get all the notaList where faltaInjustificada equals to UPDATED_FALTA_INJUSTIFICADA
+        defaultNotaShouldNotBeFound("faltaInjustificada.equals=" + UPDATED_FALTA_INJUSTIFICADA);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByFaltaInjustificadaIsNotEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where faltaInjustificada not equals to DEFAULT_FALTA_INJUSTIFICADA
+        defaultNotaShouldNotBeFound("faltaInjustificada.notEquals=" + DEFAULT_FALTA_INJUSTIFICADA);
+
+        // Get all the notaList where faltaInjustificada not equals to UPDATED_FALTA_INJUSTIFICADA
+        defaultNotaShouldBeFound("faltaInjustificada.notEquals=" + UPDATED_FALTA_INJUSTIFICADA);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByFaltaInjustificadaIsInShouldWork() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where faltaInjustificada in DEFAULT_FALTA_INJUSTIFICADA or UPDATED_FALTA_INJUSTIFICADA
+        defaultNotaShouldBeFound("faltaInjustificada.in=" + DEFAULT_FALTA_INJUSTIFICADA + "," + UPDATED_FALTA_INJUSTIFICADA);
+
+        // Get all the notaList where faltaInjustificada equals to UPDATED_FALTA_INJUSTIFICADA
+        defaultNotaShouldNotBeFound("faltaInjustificada.in=" + UPDATED_FALTA_INJUSTIFICADA);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByFaltaInjustificadaIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where faltaInjustificada is not null
+        defaultNotaShouldBeFound("faltaInjustificada.specified=true");
+
+        // Get all the notaList where faltaInjustificada is null
+        defaultNotaShouldNotBeFound("faltaInjustificada.specified=false");
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByFaltaInjustificadaIsGreaterThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where faltaInjustificada is greater than or equal to DEFAULT_FALTA_INJUSTIFICADA
+        defaultNotaShouldBeFound("faltaInjustificada.greaterThanOrEqual=" + DEFAULT_FALTA_INJUSTIFICADA);
+
+        // Get all the notaList where faltaInjustificada is greater than or equal to UPDATED_FALTA_INJUSTIFICADA
+        defaultNotaShouldNotBeFound("faltaInjustificada.greaterThanOrEqual=" + UPDATED_FALTA_INJUSTIFICADA);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByFaltaInjustificadaIsLessThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where faltaInjustificada is less than or equal to DEFAULT_FALTA_INJUSTIFICADA
+        defaultNotaShouldBeFound("faltaInjustificada.lessThanOrEqual=" + DEFAULT_FALTA_INJUSTIFICADA);
+
+        // Get all the notaList where faltaInjustificada is less than or equal to SMALLER_FALTA_INJUSTIFICADA
+        defaultNotaShouldNotBeFound("faltaInjustificada.lessThanOrEqual=" + SMALLER_FALTA_INJUSTIFICADA);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByFaltaInjustificadaIsLessThanSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where faltaInjustificada is less than DEFAULT_FALTA_INJUSTIFICADA
+        defaultNotaShouldNotBeFound("faltaInjustificada.lessThan=" + DEFAULT_FALTA_INJUSTIFICADA);
+
+        // Get all the notaList where faltaInjustificada is less than UPDATED_FALTA_INJUSTIFICADA
+        defaultNotaShouldBeFound("faltaInjustificada.lessThan=" + UPDATED_FALTA_INJUSTIFICADA);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByFaltaInjustificadaIsGreaterThanSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where faltaInjustificada is greater than DEFAULT_FALTA_INJUSTIFICADA
+        defaultNotaShouldNotBeFound("faltaInjustificada.greaterThan=" + DEFAULT_FALTA_INJUSTIFICADA);
+
+        // Get all the notaList where faltaInjustificada is greater than SMALLER_FALTA_INJUSTIFICADA
+        defaultNotaShouldBeFound("faltaInjustificada.greaterThan=" + SMALLER_FALTA_INJUSTIFICADA);
+    }
+
+
+    @Test
+    @Transactional
+    public void getAllNotasByAvaliacaoContinucaIsEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where avaliacaoContinuca equals to DEFAULT_AVALIACAO_CONTINUCA
+        defaultNotaShouldBeFound("avaliacaoContinuca.equals=" + DEFAULT_AVALIACAO_CONTINUCA);
+
+        // Get all the notaList where avaliacaoContinuca equals to UPDATED_AVALIACAO_CONTINUCA
+        defaultNotaShouldNotBeFound("avaliacaoContinuca.equals=" + UPDATED_AVALIACAO_CONTINUCA);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByAvaliacaoContinucaIsNotEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where avaliacaoContinuca not equals to DEFAULT_AVALIACAO_CONTINUCA
+        defaultNotaShouldNotBeFound("avaliacaoContinuca.notEquals=" + DEFAULT_AVALIACAO_CONTINUCA);
+
+        // Get all the notaList where avaliacaoContinuca not equals to UPDATED_AVALIACAO_CONTINUCA
+        defaultNotaShouldBeFound("avaliacaoContinuca.notEquals=" + UPDATED_AVALIACAO_CONTINUCA);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByAvaliacaoContinucaIsInShouldWork() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where avaliacaoContinuca in DEFAULT_AVALIACAO_CONTINUCA or UPDATED_AVALIACAO_CONTINUCA
+        defaultNotaShouldBeFound("avaliacaoContinuca.in=" + DEFAULT_AVALIACAO_CONTINUCA + "," + UPDATED_AVALIACAO_CONTINUCA);
+
+        // Get all the notaList where avaliacaoContinuca equals to UPDATED_AVALIACAO_CONTINUCA
+        defaultNotaShouldNotBeFound("avaliacaoContinuca.in=" + UPDATED_AVALIACAO_CONTINUCA);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByAvaliacaoContinucaIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where avaliacaoContinuca is not null
+        defaultNotaShouldBeFound("avaliacaoContinuca.specified=true");
+
+        // Get all the notaList where avaliacaoContinuca is null
+        defaultNotaShouldNotBeFound("avaliacaoContinuca.specified=false");
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByAvaliacaoContinucaIsGreaterThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where avaliacaoContinuca is greater than or equal to DEFAULT_AVALIACAO_CONTINUCA
+        defaultNotaShouldBeFound("avaliacaoContinuca.greaterThanOrEqual=" + DEFAULT_AVALIACAO_CONTINUCA);
+
+        // Get all the notaList where avaliacaoContinuca is greater than or equal to (DEFAULT_AVALIACAO_CONTINUCA + 1)
+        defaultNotaShouldNotBeFound("avaliacaoContinuca.greaterThanOrEqual=" + (DEFAULT_AVALIACAO_CONTINUCA + 1));
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByAvaliacaoContinucaIsLessThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where avaliacaoContinuca is less than or equal to DEFAULT_AVALIACAO_CONTINUCA
+        defaultNotaShouldBeFound("avaliacaoContinuca.lessThanOrEqual=" + DEFAULT_AVALIACAO_CONTINUCA);
+
+        // Get all the notaList where avaliacaoContinuca is less than or equal to SMALLER_AVALIACAO_CONTINUCA
+        defaultNotaShouldNotBeFound("avaliacaoContinuca.lessThanOrEqual=" + SMALLER_AVALIACAO_CONTINUCA);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByAvaliacaoContinucaIsLessThanSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where avaliacaoContinuca is less than DEFAULT_AVALIACAO_CONTINUCA
+        defaultNotaShouldNotBeFound("avaliacaoContinuca.lessThan=" + DEFAULT_AVALIACAO_CONTINUCA);
+
+        // Get all the notaList where avaliacaoContinuca is less than (DEFAULT_AVALIACAO_CONTINUCA + 1)
+        defaultNotaShouldBeFound("avaliacaoContinuca.lessThan=" + (DEFAULT_AVALIACAO_CONTINUCA + 1));
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByAvaliacaoContinucaIsGreaterThanSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where avaliacaoContinuca is greater than DEFAULT_AVALIACAO_CONTINUCA
+        defaultNotaShouldNotBeFound("avaliacaoContinuca.greaterThan=" + DEFAULT_AVALIACAO_CONTINUCA);
+
+        // Get all the notaList where avaliacaoContinuca is greater than SMALLER_AVALIACAO_CONTINUCA
+        defaultNotaShouldBeFound("avaliacaoContinuca.greaterThan=" + SMALLER_AVALIACAO_CONTINUCA);
+    }
+
+
+    @Test
+    @Transactional
+    public void getAllNotasByPrimeiraProvaIsEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where primeiraProva equals to DEFAULT_PRIMEIRA_PROVA
+        defaultNotaShouldBeFound("primeiraProva.equals=" + DEFAULT_PRIMEIRA_PROVA);
+
+        // Get all the notaList where primeiraProva equals to UPDATED_PRIMEIRA_PROVA
+        defaultNotaShouldNotBeFound("primeiraProva.equals=" + UPDATED_PRIMEIRA_PROVA);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByPrimeiraProvaIsNotEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where primeiraProva not equals to DEFAULT_PRIMEIRA_PROVA
+        defaultNotaShouldNotBeFound("primeiraProva.notEquals=" + DEFAULT_PRIMEIRA_PROVA);
+
+        // Get all the notaList where primeiraProva not equals to UPDATED_PRIMEIRA_PROVA
+        defaultNotaShouldBeFound("primeiraProva.notEquals=" + UPDATED_PRIMEIRA_PROVA);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByPrimeiraProvaIsInShouldWork() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where primeiraProva in DEFAULT_PRIMEIRA_PROVA or UPDATED_PRIMEIRA_PROVA
+        defaultNotaShouldBeFound("primeiraProva.in=" + DEFAULT_PRIMEIRA_PROVA + "," + UPDATED_PRIMEIRA_PROVA);
+
+        // Get all the notaList where primeiraProva equals to UPDATED_PRIMEIRA_PROVA
+        defaultNotaShouldNotBeFound("primeiraProva.in=" + UPDATED_PRIMEIRA_PROVA);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByPrimeiraProvaIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where primeiraProva is not null
+        defaultNotaShouldBeFound("primeiraProva.specified=true");
+
+        // Get all the notaList where primeiraProva is null
+        defaultNotaShouldNotBeFound("primeiraProva.specified=false");
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByPrimeiraProvaIsGreaterThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where primeiraProva is greater than or equal to DEFAULT_PRIMEIRA_PROVA
+        defaultNotaShouldBeFound("primeiraProva.greaterThanOrEqual=" + DEFAULT_PRIMEIRA_PROVA);
+
+        // Get all the notaList where primeiraProva is greater than or equal to (DEFAULT_PRIMEIRA_PROVA + 1)
+        defaultNotaShouldNotBeFound("primeiraProva.greaterThanOrEqual=" + (DEFAULT_PRIMEIRA_PROVA + 1));
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByPrimeiraProvaIsLessThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where primeiraProva is less than or equal to DEFAULT_PRIMEIRA_PROVA
+        defaultNotaShouldBeFound("primeiraProva.lessThanOrEqual=" + DEFAULT_PRIMEIRA_PROVA);
+
+        // Get all the notaList where primeiraProva is less than or equal to SMALLER_PRIMEIRA_PROVA
+        defaultNotaShouldNotBeFound("primeiraProva.lessThanOrEqual=" + SMALLER_PRIMEIRA_PROVA);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByPrimeiraProvaIsLessThanSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where primeiraProva is less than DEFAULT_PRIMEIRA_PROVA
+        defaultNotaShouldNotBeFound("primeiraProva.lessThan=" + DEFAULT_PRIMEIRA_PROVA);
+
+        // Get all the notaList where primeiraProva is less than (DEFAULT_PRIMEIRA_PROVA + 1)
+        defaultNotaShouldBeFound("primeiraProva.lessThan=" + (DEFAULT_PRIMEIRA_PROVA + 1));
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByPrimeiraProvaIsGreaterThanSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where primeiraProva is greater than DEFAULT_PRIMEIRA_PROVA
+        defaultNotaShouldNotBeFound("primeiraProva.greaterThan=" + DEFAULT_PRIMEIRA_PROVA);
+
+        // Get all the notaList where primeiraProva is greater than SMALLER_PRIMEIRA_PROVA
+        defaultNotaShouldBeFound("primeiraProva.greaterThan=" + SMALLER_PRIMEIRA_PROVA);
+    }
+
+
+    @Test
+    @Transactional
+    public void getAllNotasBySegundaProvaIsEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where segundaProva equals to DEFAULT_SEGUNDA_PROVA
+        defaultNotaShouldBeFound("segundaProva.equals=" + DEFAULT_SEGUNDA_PROVA);
+
+        // Get all the notaList where segundaProva equals to UPDATED_SEGUNDA_PROVA
+        defaultNotaShouldNotBeFound("segundaProva.equals=" + UPDATED_SEGUNDA_PROVA);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasBySegundaProvaIsNotEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where segundaProva not equals to DEFAULT_SEGUNDA_PROVA
+        defaultNotaShouldNotBeFound("segundaProva.notEquals=" + DEFAULT_SEGUNDA_PROVA);
+
+        // Get all the notaList where segundaProva not equals to UPDATED_SEGUNDA_PROVA
+        defaultNotaShouldBeFound("segundaProva.notEquals=" + UPDATED_SEGUNDA_PROVA);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasBySegundaProvaIsInShouldWork() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where segundaProva in DEFAULT_SEGUNDA_PROVA or UPDATED_SEGUNDA_PROVA
+        defaultNotaShouldBeFound("segundaProva.in=" + DEFAULT_SEGUNDA_PROVA + "," + UPDATED_SEGUNDA_PROVA);
+
+        // Get all the notaList where segundaProva equals to UPDATED_SEGUNDA_PROVA
+        defaultNotaShouldNotBeFound("segundaProva.in=" + UPDATED_SEGUNDA_PROVA);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasBySegundaProvaIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where segundaProva is not null
+        defaultNotaShouldBeFound("segundaProva.specified=true");
+
+        // Get all the notaList where segundaProva is null
+        defaultNotaShouldNotBeFound("segundaProva.specified=false");
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasBySegundaProvaIsGreaterThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where segundaProva is greater than or equal to DEFAULT_SEGUNDA_PROVA
+        defaultNotaShouldBeFound("segundaProva.greaterThanOrEqual=" + DEFAULT_SEGUNDA_PROVA);
+
+        // Get all the notaList where segundaProva is greater than or equal to (DEFAULT_SEGUNDA_PROVA + 1)
+        defaultNotaShouldNotBeFound("segundaProva.greaterThanOrEqual=" + (DEFAULT_SEGUNDA_PROVA + 1));
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasBySegundaProvaIsLessThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where segundaProva is less than or equal to DEFAULT_SEGUNDA_PROVA
+        defaultNotaShouldBeFound("segundaProva.lessThanOrEqual=" + DEFAULT_SEGUNDA_PROVA);
+
+        // Get all the notaList where segundaProva is less than or equal to SMALLER_SEGUNDA_PROVA
+        defaultNotaShouldNotBeFound("segundaProva.lessThanOrEqual=" + SMALLER_SEGUNDA_PROVA);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasBySegundaProvaIsLessThanSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where segundaProva is less than DEFAULT_SEGUNDA_PROVA
+        defaultNotaShouldNotBeFound("segundaProva.lessThan=" + DEFAULT_SEGUNDA_PROVA);
+
+        // Get all the notaList where segundaProva is less than (DEFAULT_SEGUNDA_PROVA + 1)
+        defaultNotaShouldBeFound("segundaProva.lessThan=" + (DEFAULT_SEGUNDA_PROVA + 1));
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasBySegundaProvaIsGreaterThanSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where segundaProva is greater than DEFAULT_SEGUNDA_PROVA
+        defaultNotaShouldNotBeFound("segundaProva.greaterThan=" + DEFAULT_SEGUNDA_PROVA);
+
+        // Get all the notaList where segundaProva is greater than SMALLER_SEGUNDA_PROVA
+        defaultNotaShouldBeFound("segundaProva.greaterThan=" + SMALLER_SEGUNDA_PROVA);
+    }
+
+
+    @Test
+    @Transactional
+    public void getAllNotasByExameIsEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where exame equals to DEFAULT_EXAME
+        defaultNotaShouldBeFound("exame.equals=" + DEFAULT_EXAME);
+
+        // Get all the notaList where exame equals to UPDATED_EXAME
+        defaultNotaShouldNotBeFound("exame.equals=" + UPDATED_EXAME);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByExameIsNotEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where exame not equals to DEFAULT_EXAME
+        defaultNotaShouldNotBeFound("exame.notEquals=" + DEFAULT_EXAME);
+
+        // Get all the notaList where exame not equals to UPDATED_EXAME
+        defaultNotaShouldBeFound("exame.notEquals=" + UPDATED_EXAME);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByExameIsInShouldWork() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where exame in DEFAULT_EXAME or UPDATED_EXAME
+        defaultNotaShouldBeFound("exame.in=" + DEFAULT_EXAME + "," + UPDATED_EXAME);
+
+        // Get all the notaList where exame equals to UPDATED_EXAME
+        defaultNotaShouldNotBeFound("exame.in=" + UPDATED_EXAME);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByExameIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where exame is not null
+        defaultNotaShouldBeFound("exame.specified=true");
+
+        // Get all the notaList where exame is null
+        defaultNotaShouldNotBeFound("exame.specified=false");
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByExameIsGreaterThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where exame is greater than or equal to DEFAULT_EXAME
+        defaultNotaShouldBeFound("exame.greaterThanOrEqual=" + DEFAULT_EXAME);
+
+        // Get all the notaList where exame is greater than or equal to (DEFAULT_EXAME + 1)
+        defaultNotaShouldNotBeFound("exame.greaterThanOrEqual=" + (DEFAULT_EXAME + 1));
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByExameIsLessThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where exame is less than or equal to DEFAULT_EXAME
+        defaultNotaShouldBeFound("exame.lessThanOrEqual=" + DEFAULT_EXAME);
+
+        // Get all the notaList where exame is less than or equal to SMALLER_EXAME
+        defaultNotaShouldNotBeFound("exame.lessThanOrEqual=" + SMALLER_EXAME);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByExameIsLessThanSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where exame is less than DEFAULT_EXAME
+        defaultNotaShouldNotBeFound("exame.lessThan=" + DEFAULT_EXAME);
+
+        // Get all the notaList where exame is less than (DEFAULT_EXAME + 1)
+        defaultNotaShouldBeFound("exame.lessThan=" + (DEFAULT_EXAME + 1));
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByExameIsGreaterThanSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where exame is greater than DEFAULT_EXAME
+        defaultNotaShouldNotBeFound("exame.greaterThan=" + DEFAULT_EXAME);
+
+        // Get all the notaList where exame is greater than SMALLER_EXAME
+        defaultNotaShouldBeFound("exame.greaterThan=" + SMALLER_EXAME);
+    }
+
+
+    @Test
+    @Transactional
+    public void getAllNotasByRecursoIsEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where recurso equals to DEFAULT_RECURSO
+        defaultNotaShouldBeFound("recurso.equals=" + DEFAULT_RECURSO);
+
+        // Get all the notaList where recurso equals to UPDATED_RECURSO
+        defaultNotaShouldNotBeFound("recurso.equals=" + UPDATED_RECURSO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByRecursoIsNotEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where recurso not equals to DEFAULT_RECURSO
+        defaultNotaShouldNotBeFound("recurso.notEquals=" + DEFAULT_RECURSO);
+
+        // Get all the notaList where recurso not equals to UPDATED_RECURSO
+        defaultNotaShouldBeFound("recurso.notEquals=" + UPDATED_RECURSO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByRecursoIsInShouldWork() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where recurso in DEFAULT_RECURSO or UPDATED_RECURSO
+        defaultNotaShouldBeFound("recurso.in=" + DEFAULT_RECURSO + "," + UPDATED_RECURSO);
+
+        // Get all the notaList where recurso equals to UPDATED_RECURSO
+        defaultNotaShouldNotBeFound("recurso.in=" + UPDATED_RECURSO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByRecursoIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where recurso is not null
+        defaultNotaShouldBeFound("recurso.specified=true");
+
+        // Get all the notaList where recurso is null
+        defaultNotaShouldNotBeFound("recurso.specified=false");
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByRecursoIsGreaterThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where recurso is greater than or equal to DEFAULT_RECURSO
+        defaultNotaShouldBeFound("recurso.greaterThanOrEqual=" + DEFAULT_RECURSO);
+
+        // Get all the notaList where recurso is greater than or equal to (DEFAULT_RECURSO + 1)
+        defaultNotaShouldNotBeFound("recurso.greaterThanOrEqual=" + (DEFAULT_RECURSO + 1));
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByRecursoIsLessThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where recurso is less than or equal to DEFAULT_RECURSO
+        defaultNotaShouldBeFound("recurso.lessThanOrEqual=" + DEFAULT_RECURSO);
+
+        // Get all the notaList where recurso is less than or equal to SMALLER_RECURSO
+        defaultNotaShouldNotBeFound("recurso.lessThanOrEqual=" + SMALLER_RECURSO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByRecursoIsLessThanSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where recurso is less than DEFAULT_RECURSO
+        defaultNotaShouldNotBeFound("recurso.lessThan=" + DEFAULT_RECURSO);
+
+        // Get all the notaList where recurso is less than (DEFAULT_RECURSO + 1)
+        defaultNotaShouldBeFound("recurso.lessThan=" + (DEFAULT_RECURSO + 1));
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByRecursoIsGreaterThanSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where recurso is greater than DEFAULT_RECURSO
+        defaultNotaShouldNotBeFound("recurso.greaterThan=" + DEFAULT_RECURSO);
+
+        // Get all the notaList where recurso is greater than SMALLER_RECURSO
+        defaultNotaShouldBeFound("recurso.greaterThan=" + SMALLER_RECURSO);
+    }
+
+
+    @Test
+    @Transactional
+    public void getAllNotasByExameEspecialIsEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where exameEspecial equals to DEFAULT_EXAME_ESPECIAL
+        defaultNotaShouldBeFound("exameEspecial.equals=" + DEFAULT_EXAME_ESPECIAL);
+
+        // Get all the notaList where exameEspecial equals to UPDATED_EXAME_ESPECIAL
+        defaultNotaShouldNotBeFound("exameEspecial.equals=" + UPDATED_EXAME_ESPECIAL);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByExameEspecialIsNotEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where exameEspecial not equals to DEFAULT_EXAME_ESPECIAL
+        defaultNotaShouldNotBeFound("exameEspecial.notEquals=" + DEFAULT_EXAME_ESPECIAL);
+
+        // Get all the notaList where exameEspecial not equals to UPDATED_EXAME_ESPECIAL
+        defaultNotaShouldBeFound("exameEspecial.notEquals=" + UPDATED_EXAME_ESPECIAL);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByExameEspecialIsInShouldWork() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where exameEspecial in DEFAULT_EXAME_ESPECIAL or UPDATED_EXAME_ESPECIAL
+        defaultNotaShouldBeFound("exameEspecial.in=" + DEFAULT_EXAME_ESPECIAL + "," + UPDATED_EXAME_ESPECIAL);
+
+        // Get all the notaList where exameEspecial equals to UPDATED_EXAME_ESPECIAL
+        defaultNotaShouldNotBeFound("exameEspecial.in=" + UPDATED_EXAME_ESPECIAL);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByExameEspecialIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where exameEspecial is not null
+        defaultNotaShouldBeFound("exameEspecial.specified=true");
+
+        // Get all the notaList where exameEspecial is null
+        defaultNotaShouldNotBeFound("exameEspecial.specified=false");
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByExameEspecialIsGreaterThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where exameEspecial is greater than or equal to DEFAULT_EXAME_ESPECIAL
+        defaultNotaShouldBeFound("exameEspecial.greaterThanOrEqual=" + DEFAULT_EXAME_ESPECIAL);
+
+        // Get all the notaList where exameEspecial is greater than or equal to (DEFAULT_EXAME_ESPECIAL + 1)
+        defaultNotaShouldNotBeFound("exameEspecial.greaterThanOrEqual=" + (DEFAULT_EXAME_ESPECIAL + 1));
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByExameEspecialIsLessThanOrEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where exameEspecial is less than or equal to DEFAULT_EXAME_ESPECIAL
+        defaultNotaShouldBeFound("exameEspecial.lessThanOrEqual=" + DEFAULT_EXAME_ESPECIAL);
+
+        // Get all the notaList where exameEspecial is less than or equal to SMALLER_EXAME_ESPECIAL
+        defaultNotaShouldNotBeFound("exameEspecial.lessThanOrEqual=" + SMALLER_EXAME_ESPECIAL);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByExameEspecialIsLessThanSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where exameEspecial is less than DEFAULT_EXAME_ESPECIAL
+        defaultNotaShouldNotBeFound("exameEspecial.lessThan=" + DEFAULT_EXAME_ESPECIAL);
+
+        // Get all the notaList where exameEspecial is less than (DEFAULT_EXAME_ESPECIAL + 1)
+        defaultNotaShouldBeFound("exameEspecial.lessThan=" + (DEFAULT_EXAME_ESPECIAL + 1));
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasByExameEspecialIsGreaterThanSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where exameEspecial is greater than DEFAULT_EXAME_ESPECIAL
+        defaultNotaShouldNotBeFound("exameEspecial.greaterThan=" + DEFAULT_EXAME_ESPECIAL);
+
+        // Get all the notaList where exameEspecial is greater than SMALLER_EXAME_ESPECIAL
+        defaultNotaShouldBeFound("exameEspecial.greaterThan=" + SMALLER_EXAME_ESPECIAL);
+    }
+
+
+    @Test
+    @Transactional
+    public void getAllNotasBySituacaoIsEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where situacao equals to DEFAULT_SITUACAO
+        defaultNotaShouldBeFound("situacao.equals=" + DEFAULT_SITUACAO);
+
+        // Get all the notaList where situacao equals to UPDATED_SITUACAO
+        defaultNotaShouldNotBeFound("situacao.equals=" + UPDATED_SITUACAO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasBySituacaoIsNotEqualToSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where situacao not equals to DEFAULT_SITUACAO
+        defaultNotaShouldNotBeFound("situacao.notEquals=" + DEFAULT_SITUACAO);
+
+        // Get all the notaList where situacao not equals to UPDATED_SITUACAO
+        defaultNotaShouldBeFound("situacao.notEquals=" + UPDATED_SITUACAO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasBySituacaoIsInShouldWork() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where situacao in DEFAULT_SITUACAO or UPDATED_SITUACAO
+        defaultNotaShouldBeFound("situacao.in=" + DEFAULT_SITUACAO + "," + UPDATED_SITUACAO);
+
+        // Get all the notaList where situacao equals to UPDATED_SITUACAO
+        defaultNotaShouldNotBeFound("situacao.in=" + UPDATED_SITUACAO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasBySituacaoIsNullOrNotNull() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where situacao is not null
+        defaultNotaShouldBeFound("situacao.specified=true");
+
+        // Get all the notaList where situacao is null
+        defaultNotaShouldNotBeFound("situacao.specified=false");
+    }
+                @Test
+    @Transactional
+    public void getAllNotasBySituacaoContainsSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where situacao contains DEFAULT_SITUACAO
+        defaultNotaShouldBeFound("situacao.contains=" + DEFAULT_SITUACAO);
+
+        // Get all the notaList where situacao contains UPDATED_SITUACAO
+        defaultNotaShouldNotBeFound("situacao.contains=" + UPDATED_SITUACAO);
+    }
+
+    @Test
+    @Transactional
+    public void getAllNotasBySituacaoNotContainsSomething() throws Exception {
+        // Initialize the database
+        notaRepository.saveAndFlush(nota);
+
+        // Get all the notaList where situacao does not contain DEFAULT_SITUACAO
+        defaultNotaShouldNotBeFound("situacao.doesNotContain=" + DEFAULT_SITUACAO);
+
+        // Get all the notaList where situacao does not contain UPDATED_SITUACAO
+        defaultNotaShouldBeFound("situacao.doesNotContain=" + UPDATED_SITUACAO);
+    }
+
+
+    @Test
+    @Transactional
+    public void getAllNotasByTurmaIsEqualToSomething() throws Exception {
+        // Get already existing entity
+        Turma turma = nota.getTurma();
+        notaRepository.saveAndFlush(nota);
+        Long turmaId = turma.getId();
+
+        // Get all the notaList where turma equals to turmaId
+        defaultNotaShouldBeFound("turmaId.equals=" + turmaId);
+
+        // Get all the notaList where turma equals to turmaId + 1
+        defaultNotaShouldNotBeFound("turmaId.equals=" + (turmaId + 1));
+    }
+
+
+    @Test
+    @Transactional
+    public void getAllNotasByCurriculoIsEqualToSomething() throws Exception {
+        // Get already existing entity
+        PlanoCurricular curriculo = nota.getCurriculo();
+        notaRepository.saveAndFlush(nota);
+        Long curriculoId = curriculo.getId();
+
+        // Get all the notaList where curriculo equals to curriculoId
+        defaultNotaShouldBeFound("curriculoId.equals=" + curriculoId);
+
+        // Get all the notaList where curriculo equals to curriculoId + 1
+        defaultNotaShouldNotBeFound("curriculoId.equals=" + (curriculoId + 1));
+    }
+
+
+    @Test
+    @Transactional
+    public void getAllNotasByProfessorIsEqualToSomething() throws Exception {
+        // Get already existing entity
+        Professor professor = nota.getProfessor();
+        notaRepository.saveAndFlush(nota);
+        Long professorId = professor.getId();
+
+        // Get all the notaList where professor equals to professorId
+        defaultNotaShouldBeFound("professorId.equals=" + professorId);
+
+        // Get all the notaList where professor equals to professorId + 1
+        defaultNotaShouldNotBeFound("professorId.equals=" + (professorId + 1));
+    }
+
+    /**
+     * Executes the search, and checks that the default entity is returned.
+     */
+    private void defaultNotaShouldBeFound(String filter) throws Exception {
+        restNotaMockMvc.perform(get("/api/notas?sort=id,desc&" + filter))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(nota.getId().intValue())))
+            .andExpect(jsonPath("$.[*].numeroProcesso").value(hasItem(DEFAULT_NUMERO_PROCESSO)))
+            .andExpect(jsonPath("$.[*].nomeAluno").value(hasItem(DEFAULT_NOME_ALUNO)))
+            .andExpect(jsonPath("$.[*].disciplina").value(hasItem(DEFAULT_DISCIPLINA)))
+            .andExpect(jsonPath("$.[*].peridoLectivo").value(hasItem(DEFAULT_PERIDO_LECTIVO)))
+            .andExpect(jsonPath("$.[*].anoLectivo").value(hasItem(DEFAULT_ANO_LECTIVO)))
+            .andExpect(jsonPath("$.[*].faltaJustificada").value(hasItem(DEFAULT_FALTA_JUSTIFICADA)))
+            .andExpect(jsonPath("$.[*].faltaInjustificada").value(hasItem(DEFAULT_FALTA_INJUSTIFICADA)))
+            .andExpect(jsonPath("$.[*].avaliacaoContinuca").value(hasItem(DEFAULT_AVALIACAO_CONTINUCA.doubleValue())))
+            .andExpect(jsonPath("$.[*].primeiraProva").value(hasItem(DEFAULT_PRIMEIRA_PROVA.doubleValue())))
+            .andExpect(jsonPath("$.[*].segundaProva").value(hasItem(DEFAULT_SEGUNDA_PROVA.doubleValue())))
+            .andExpect(jsonPath("$.[*].exame").value(hasItem(DEFAULT_EXAME.doubleValue())))
+            .andExpect(jsonPath("$.[*].recurso").value(hasItem(DEFAULT_RECURSO.doubleValue())))
+            .andExpect(jsonPath("$.[*].exameEspecial").value(hasItem(DEFAULT_EXAME_ESPECIAL.doubleValue())))
+            .andExpect(jsonPath("$.[*].provaContentType").value(hasItem(DEFAULT_PROVA_CONTENT_TYPE)))
+            .andExpect(jsonPath("$.[*].prova").value(hasItem(Base64Utils.encodeToString(DEFAULT_PROVA))))
+            .andExpect(jsonPath("$.[*].situacao").value(hasItem(DEFAULT_SITUACAO)));
+
+        // Check, that the count call also returns 1
+        restNotaMockMvc.perform(get("/api/notas/count?sort=id,desc&" + filter))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().string("1"));
+    }
+
+    /**
+     * Executes the search, and checks that the default entity is not returned.
+     */
+    private void defaultNotaShouldNotBeFound(String filter) throws Exception {
+        restNotaMockMvc.perform(get("/api/notas?sort=id,desc&" + filter))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$").isEmpty());
+
+        // Check, that the count call also returns 0
+        restNotaMockMvc.perform(get("/api/notas/count?sort=id,desc&" + filter))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(content().string("0"));
+    }
+
 
     @Test
     @Transactional

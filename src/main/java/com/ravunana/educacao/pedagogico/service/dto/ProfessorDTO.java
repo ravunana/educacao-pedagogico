@@ -2,6 +2,7 @@ package com.ravunana.educacao.pedagogico.service.dto;
 import javax.validation.constraints.*;
 import java.io.Serializable;
 import java.util.Objects;
+import javax.persistence.Lob;
 
 /**
  * A DTO for the {@link com.ravunana.educacao.pedagogico.domain.Professor} entity.
@@ -16,8 +17,10 @@ public class ProfessorDTO implements Serializable {
     @NotNull
     private String sexo;
 
-    private String fotografia;
+    @Lob
+    private byte[] fotografia;
 
+    private String fotografiaContentType;
     @NotNull
     private String contacto;
 
@@ -31,6 +34,13 @@ public class ProfessorDTO implements Serializable {
     private String numeroAgente;
 
     private String utilizadorId;
+
+    private String grauAcademico;
+
+    private String cursoAcademico;
+
+    @Lob
+    private String observacao;
 
     private Boolean ativo;
 
@@ -59,12 +69,20 @@ public class ProfessorDTO implements Serializable {
         this.sexo = sexo;
     }
 
-    public String getFotografia() {
+    public byte[] getFotografia() {
         return fotografia;
     }
 
-    public void setFotografia(String fotografia) {
+    public void setFotografia(byte[] fotografia) {
         this.fotografia = fotografia;
+    }
+
+    public String getFotografiaContentType() {
+        return fotografiaContentType;
+    }
+
+    public void setFotografiaContentType(String fotografiaContentType) {
+        this.fotografiaContentType = fotografiaContentType;
     }
 
     public String getContacto() {
@@ -105,6 +123,30 @@ public class ProfessorDTO implements Serializable {
 
     public void setUtilizadorId(String utilizadorId) {
         this.utilizadorId = utilizadorId;
+    }
+
+    public String getGrauAcademico() {
+        return grauAcademico;
+    }
+
+    public void setGrauAcademico(String grauAcademico) {
+        this.grauAcademico = grauAcademico;
+    }
+
+    public String getCursoAcademico() {
+        return cursoAcademico;
+    }
+
+    public void setCursoAcademico(String cursoAcademico) {
+        this.cursoAcademico = cursoAcademico;
+    }
+
+    public String getObservacao() {
+        return observacao;
+    }
+
+    public void setObservacao(String observacao) {
+        this.observacao = observacao;
     }
 
     public Boolean isAtivo() {
@@ -148,6 +190,9 @@ public class ProfessorDTO implements Serializable {
             ", residencia='" + getResidencia() + "'" +
             ", numeroAgente='" + getNumeroAgente() + "'" +
             ", utilizadorId='" + getUtilizadorId() + "'" +
+            ", grauAcademico='" + getGrauAcademico() + "'" +
+            ", cursoAcademico='" + getCursoAcademico() + "'" +
+            ", observacao='" + getObservacao() + "'" +
             ", ativo='" + isAtivo() + "'" +
             "}";
     }

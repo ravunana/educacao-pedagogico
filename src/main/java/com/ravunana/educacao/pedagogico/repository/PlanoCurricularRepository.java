@@ -10,6 +10,6 @@ import org.springframework.stereotype.Repository;
  */
 @SuppressWarnings("unused")
 @Repository
-public interface PlanoCurricularRepository extends JpaRepository<PlanoCurricular, Long> {
+public interface PlanoCurricularRepository extends JpaRepository<PlanoCurricular, Long>, JpaSpecificationExecutor<PlanoCurricular> {
 
 }
