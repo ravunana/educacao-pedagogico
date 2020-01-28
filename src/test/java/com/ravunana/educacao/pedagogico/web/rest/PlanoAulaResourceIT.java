@@ -561,20 +561,20 @@ public class PlanoAulaResourceIT {
     }
 
 
-    @Test
-    @Transactional
-    public void getAllPlanoAulasByTurmaIsEqualToSomething() throws Exception {
-        // Get already existing entity
-        Turma turma = planoAula.getTurma();
-        planoAulaRepository.saveAndFlush(planoAula);
-        Long turmaId = turma.getId();
+    // @Test
+    // @Transactional
+    // public void getAllPlanoAulasByTurmaIsEqualToSomething() throws Exception {
+    //     // Get already existing entity
+    //     Turma turma = planoAula.getTurma();
+    //     planoAulaRepository.saveAndFlush(planoAula);
+    //     Long turmaId = turma.getId();
 
-        // Get all the planoAulaList where turma equals to turmaId
-        defaultPlanoAulaShouldBeFound("turmaId.equals=" + turmaId);
+    //     // Get all the planoAulaList where turma equals to turmaId
+    //     defaultPlanoAulaShouldBeFound("turmaId.equals=" + turmaId);
 
-        // Get all the planoAulaList where turma equals to turmaId + 1
-        defaultPlanoAulaShouldNotBeFound("turmaId.equals=" + (turmaId + 1));
-    }
+    //     // Get all the planoAulaList where turma equals to turmaId + 1
+    //     defaultPlanoAulaShouldNotBeFound("turmaId.equals=" + (turmaId + 1));
+    // }
 
 
     @Test
