@@ -34,6 +34,7 @@ public class TurmaService {
     private final TurmaMapper turmaMapper;
 
     private final TurmaSearchRepository turmaSearchRepository;
+    private final int anoLectivo = ZonedDateTime.now().getYear();
 
     @Autowired
     private CursoRepository cursoRepository;
@@ -53,12 +54,10 @@ public class TurmaService {
      */
     public TurmaDTO save(final TurmaDTO turmaDTO) {
         log.debug("Request to save Turma : {}", turmaDTO);
-        final int anoLectivo = ZonedDateTime.now().getYear();
         turmaDTO.setAnoLectivo( anoLectivo );
         turmaDTO.setData(ZonedDateTime.now());
         turmaDTO.setAberta( true );
-        turmaDTO.setDescricao("");
-        // this.getDescricaoTurma(turmaDTO.getCursoId(), turmaDTO.getClasse(), turmaDTO.getSala(), anoLectivo);
+        this.getDescricaoTurma(turmaDTO.getCursoId(), turmaDTO.getClasse(), turmaDTO.getSala(), turmaDTO.getTurno() );
         Turma turma = turmaMapper.toEntity(turmaDTO);
         turma = turmaRepository.save(turma);
         final TurmaDTO result = turmaMapper.toDto(turma);
@@ -114,8 +113,7 @@ public class TurmaService {
         return turmaSearchRepository.search(queryStringQuery(query), pageable).map(turmaMapper::toDto);
     }
 
-    private String getDescricaoTurma(final Long cursoId, final Integer classe, final Integer sala, final String turno,
-            final int anoLectivo) {
+    private String getDescricaoTurma(Long cursoId, Integer classe, Integer sala, String turno) {
         final Curso curso = cursoRepository.findById(cursoId).get();
         final String areaFormacaoSub = curso.getAreaFormacao().substring(0, 1);
         final String siglaCurso = curso.getSigla();
